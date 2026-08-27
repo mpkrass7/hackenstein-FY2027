@@ -44,3 +44,15 @@ env:
   # placeholder resolution.
   - name: WAREHOUSE_ID
     valueFrom: sql-warehouse
+
+  # ── Plain-value env (NorthPeak demo) ───────────────────────────────────
+  - name: DEMO_CATALOG
+    value: adminbox_catalog
+  - name: DEMO_SCHEMA
+    value: northpeak_retail
+  - name: DASHBOARD_ID
+    value: 01f196f54e9c1bd1a595eb8b1af7ea25
+  - name: GENIE_SPACE_ID
+    value: ""
+  - name: LAKEBASE_PROJECT_ID
+    value: northpeak-retail
