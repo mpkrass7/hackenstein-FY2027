@@ -43,7 +43,7 @@ from pyspark.sql.window import Window
 # deploy this to any workspace.
 IN_NOTEBOOK = "dbutils" in dir()
 if IN_NOTEBOOK:
-    dbutils.widgets.text("catalog", "adminbox", "Catalog")
+    dbutils.widgets.text("catalog", "adminbox_catalog", "Catalog")
     dbutils.widgets.text("schema", "northpeak_retail", "Schema")
     CATALOG = dbutils.widgets.get("catalog")
     SCHEMA = dbutils.widgets.get("schema")

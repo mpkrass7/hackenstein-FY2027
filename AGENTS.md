@@ -1,5 +1,9 @@
 # NorthPeak Retail — Agent Session Context
 
+## Team
+
+Marshall Krassenstein & Logan — pair-building with Genie Code as the primary authoring tool.
+
 ## Why We're Doing This
 
 This is for **Tech Summit FY27 Live Days** — a mandatory enablement sprint ("AI Customer Challenge"). The format: adopt a customer scenario, complete three connected builds (Lakebase, Apps, Unity Gateway), and submit to rank against other teams. Genie Code is the default build tool. We're iterating through the milestones with the agent doing the heavy lifting.
@@ -10,9 +14,9 @@ Retail stockout & markdown rescue app. A cold snap caused 5 cold-weather apparel
 
 ## Environment
 
-- **Catalog**: `adminbox`
+- **Catalog**: `adminbox_catalog`
 - **Schema**: `northpeak_retail`
-- **Volume**: `/Volumes/adminbox/northpeak_retail/raw_data/`
+- **Volume**: `/Volumes/adminbox_catalog/northpeak_retail/raw_data/`
 - **Project folder**: `/Users/marshall.krassenstein@databricks.com/northpeak-retail/`
 
 ## Key Data Anchors
