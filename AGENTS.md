@@ -61,19 +61,23 @@ Retail stockout & markdown rescue app. A cold snap caused 5 cold-weather apparel
 
 ---
 
-## Presentation deck (ShelfSignal) + GitHub Pages
+## Presentation deck (Grand Theft Demo) + GitHub Pages
 
 The pitch deck for the challenge lives in this repo as a single self-contained HTML file,
-served live via **GitHub Pages**.
+served live via **GitHub Pages**. It is themed as **Grand Theft Demo** (a GTA send-up):
+Marshall as "The Demo Guy," Logan as "The Wheelman," and the goodest boy as "The Co-Host."
 
 - **Live URL:** https://mpkrass7.github.io/hackenstein-FY2027/
 - **File:** `index.html` (all CSS + JS inline; no build step; only external dependency is Google Fonts)
-- The deck is a **horizontal-scroll** slide deck (arrow keys, space, on-screen ← →), light + dark themes, semantic palette (red = loss/stockout, amber = markdown, green = recovery, blue = brand).
+- **Cover art:** `assets/grand_theft_demo.png` (the title card). `assets/` IS published; reference deck images from there with a relative path.
+- The deck is a **horizontal-scroll** slide deck (arrow keys, space, on-screen back/next buttons). Single committed dark theme.
+- **Fonts:** Anton (display headings + stat numbers), Inter (body), IBM Plex Mono (labels/data).
+- **Semantic palette:** orange = brand accent, red = loss/stockout, gold = markdown (and the rating stars), green = recovery/win, on a dark teal ground.
 
 ### Updating the deck and shipping it live
 
 ```bash
-# 1. edit index.html — content is in the <section class="slide"> blocks inside <div class="deck">
+# 1. edit index.html (content is in the <section class="slide"> blocks inside <div class="deck">)
 # 2. preview locally:
 open index.html
 # 3. ship it (Pages auto-rebuilds on push to master, live in ~1 min):
@@ -83,7 +87,7 @@ git push origin master
 ```
 
 Hard-refresh (Cmd+Shift+R) to bypass the browser cache after a deploy.
-Add a slide by copying a `<section class="slide">` block — the slide counter is automatic.
+Add a slide by copying a `<section class="slide">` block; the slide counter is automatic.
 
 ### Pages setup (already done, for reference)
 ```bash
@@ -91,12 +95,13 @@ gh api -X POST repos/mpkrass7/hackenstein-FY2027/pages -f 'source[branch]=master
 gh api repos/mpkrass7/hackenstein-FY2027/pages    # check status / URL
 ```
 
-### Deck TODO — swap generic framing for our real scenario
-The deck currently uses the challenge-wide numbers and a generic hero example. Replace with
-our actual build for a stronger pitch:
-- Hero moment → the cold-snap story: **Store 0214 (Denver)** out of the **Summit Down Parka**, surplus sitting in **Store 0377 (Colorado Springs, ~100mi away)**.
-- Demo numbers → our exposure: **~$4.8M lost-sales** / **~$5.6M markdown**.
-- Fill the dashed `.placeholder` blocks with real app screenshots + gateway dashboard once built.
+### Scenario baked in (done)
+The deck uses our real scenario, not generic framing:
+- Hero moment: the cold-snap story, **Store 0214 (Denver)** out of the **Summit Down Parka** (`SKU-APP-04412`), surplus at **Store 0377 (Colorado Springs, ~100mi away)**.
+- Numbers: **~$4.8M lost sales** / **~$5.6M markdown** for the event, ~$200M/yr chain-wide, plus ~$10M and ~$12M as the annual outcomes to defend.
+
+### Remaining TODO
+- Fill the dashed `.placeholder` blocks on the demo and AI-spend slides with real app screenshots and the gateway usage dashboard once built.
 
 ## House rules
 
