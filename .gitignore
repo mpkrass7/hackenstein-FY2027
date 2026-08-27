@@ -1,0 +1,7 @@
+# Internal enablement captures — keep these local, do NOT publish to the public repo
+challenge.md
+challenge-page.html
+.isaac/
+.DS_Store
+.databricks/
+images/

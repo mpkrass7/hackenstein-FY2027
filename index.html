@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<title>ShelfSignal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  /* ---------- TOKENS: light is the base :root ---------- */
+  :root {
+    --bg:        #EAEEF5;
+    --surface:   #FFFFFF;
+    --surface-2: #F5F8FC;
+    --ink:       #0F1626;
+    --ink-soft:  #38445A;
+    --muted:     #6A7689;
+    --line:      #D6DEEA;
+    --line-soft: #E6ECF4;
+
+    --brand:      #2F62FF;   /* north signal */
+    --brand-deep: #16307A;
+    --brand-ghost: rgba(47,98,255,0.09);
+
+    --pos:  #0E9F6E;   /* recovery / in-stock */
+    --warn: #D97A0A;   /* markdown / at-risk */
+    --crit: #DB3A3F;   /* stockout / loss */
+
+    --shadow: 0 1px 2px rgba(15,22,38,.05), 0 12px 32px -12px rgba(15,22,38,.16);
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #080B12;
+      --surface:   #111827;
+      --surface-2: #0D1320;
+      --ink:       #EAF0FB;
+      --ink-soft:  #B4C0D6;
+      --muted:     #7C89A1;
+      --line:      #222C3E;
+      --line-soft: #1A2334;
+
+      --brand:      #6E96FF;
+      --brand-deep: #B7CCFF;
+      --brand-ghost: rgba(110,150,255,0.13);
+
+      --pos:  #35D6A0;
+      --warn: #F6B24A;
+      --crit: #FF6469;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 40px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:        #080B12;
+    --surface:   #111827;
+    --surface-2: #0D1320;
+    --ink:       #EAF0FB;
+    --ink-soft:  #B4C0D6;
+    --muted:     #7C89A1;
+    --line:      #222C3E;
+    --line-soft: #1A2334;
+
+    --brand:      #6E96FF;
+    --brand-deep: #B7CCFF;
+    --brand-ghost: rgba(110,150,255,0.13);
+
+    --pos:  #35D6A0;
+    --warn: #F6B24A;
+    --crit: #FF6469;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 40px -14px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden; /* the deck scroller owns scrolling */
+  }
+
+  /* ---------- HORIZONTAL DECK SCROLLER ---------- */
+  .deck {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;      /* Firefox */
+  }
+  .deck::-webkit-scrollbar { display: none; }   /* WebKit */
+  @media (prefers-reduced-motion: reduce) { .deck { scroll-behavior: auto; } }
+
+  /* ---------- SLIDE FRAME ---------- */
+  .slide {
+    scroll-snap-align: start;
+    flex: 0 0 100vw;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;                 /* tall slides scroll vertically within */
+    display: flex;
+    flex-direction: column;
+    justify-content: safe center;     /* 'safe' keeps the top reachable when content overflows */
+    padding: clamp(2.4rem, 6vw, 6rem) clamp(1.4rem, 7vw, 8rem);
+    position: relative;
+    border-right: 1px solid var(--line-soft);
+  }
+  .wrap { width: 100%; max-width: 1080px; margin: 0 auto; }
+
+  /* ---------- TYPE ---------- */
+  h1, h2, h3 { font-family: "Bricolage Grotesque", "Inter", sans-serif; font-weight: 800; line-height: 1.03; margin: 0; text-wrap: balance; letter-spacing: -0.02em; }
+  h1 { font-size: clamp(2.6rem, 6.5vw, 5.2rem); }
+  h2 { font-size: clamp(2rem, 4.6vw, 3.4rem); }
+  h3 { font-size: clamp(1.15rem, 2.2vw, 1.5rem); letter-spacing: -0.01em; }
+  p  { margin: 0; }
+  .lead { font-size: clamp(1.05rem, 1.9vw, 1.4rem); color: var(--ink-soft); max-width: 60ch; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .78rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--brand); margin: 0 0 1.1rem;
+    display: flex; align-items: center; gap: .7rem;
+  }
+  .eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--brand); display: inline-block; }
+  .eyebrow.pos { color: var(--pos); } .eyebrow.pos::before { background: var(--pos); }
+  .eyebrow.crit { color: var(--crit); } .eyebrow.crit::before { background: var(--crit); }
+
+  .mono { font-family: "IBM Plex Mono", monospace; }
+  .num  { font-variant-numeric: tabular-nums; }
+
+  /* ---------- COMPONENTS ---------- */
+  .cards { display: grid; gap: 1.1rem; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.6rem;
+    box-shadow: var(--shadow);
+  }
+  .card h3 { margin-bottom: .5rem; }
+  .card p { color: var(--ink-soft); font-size: .98rem; }
+
+  .stat { display: flex; flex-direction: column; gap: .35rem; }
+  .stat .big { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: clamp(2.2rem, 4.6vw, 3.5rem); line-height: 1; letter-spacing: -0.03em; }
+  .stat .lbl { font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .stat.loss .big { color: var(--crit); }
+  .stat.bleed .big { color: var(--warn); }
+  .stat.win .big { color: var(--pos); }
+  .stat.brand .big { color: var(--brand); }
+
+  .rail { border-left: 3px solid var(--brand); padding-left: 1.1rem; }
+  .rail.crit { border-color: var(--crit); }
+  .rail.pos { border-color: var(--pos); }
+
+  .quote {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 500;
+    font-size: clamp(1.3rem, 2.6vw, 1.9rem); line-height: 1.2; letter-spacing: -0.01em;
+    color: var(--ink); text-wrap: balance;
+  }
+  .attrib { font-family: "IBM Plex Mono", monospace; font-size: .82rem; color: var(--muted); margin-top: .9rem; letter-spacing: .02em; }
+  .attrib b { color: var(--ink); font-weight: 600; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: .45rem;
+    font-family: "IBM Plex Mono", monospace; font-size: .72rem; font-weight: 500;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: .3rem .6rem; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--surface-2);
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .chip.pos { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 40%, var(--line)); } .chip.pos .dot { background: var(--pos); }
+  .chip.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); } .chip.warn .dot { background: var(--warn); }
+  .chip.crit { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 40%, var(--line)); } .chip.crit .dot { background: var(--crit); }
+  .chip.brand { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); } .chip.brand .dot { background: var(--brand); }
+
+  /* fill-in placeholder for the team's live demo / real numbers */
+  .placeholder {
+    border: 1.5px dashed color-mix(in srgb, var(--brand) 55%, var(--line));
+    border-radius: var(--radius);
+    background: var(--brand-ghost);
+    padding: 1.4rem 1.5rem;
+    display: flex; flex-direction: column; gap: .4rem;
+  }
+  .placeholder .tag {
+    font-family: "IBM Plex Mono", monospace; font-size: .7rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--brand);
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .placeholder .tag::before { content: "▢"; font-size: .9rem; }
+  .placeholder p { color: var(--ink-soft); font-size: .95rem; }
+
+  /* build-arc flow */
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: .6rem; }
+  .flow .node { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.3rem 1.3rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .5rem; }
+  .flow .node .k { font-family: "IBM Plex Mono", monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); }
+  .flow .node h3 { font-size: 1.15rem; }
+  .flow .node p { font-size: .9rem; color: var(--ink-soft); }
+  .flow .arrow { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 1.4rem; }
+
+  ul.ticks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .7rem; }
+  ul.ticks li { display: flex; gap: .7rem; align-items: flex-start; color: var(--ink-soft); font-size: 1rem; }
+  ul.ticks li::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: .5rem; border-radius: 2px; background: var(--brand); }
+  ul.ticks.pos li::before { background: var(--pos); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: .5rem 1rem; align-items: baseline; }
+  .kv .mono { color: var(--brand); font-size: .82rem; white-space: nowrap; }
+  .kv span:nth-child(even) { color: var(--ink-soft); font-size: .95rem; }
+
+  .split { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(1.5rem, 4vw, 3.4rem); align-items: center; }
+  .stack-lg { display: flex; flex-direction: column; gap: 1.6rem; }
+  .stack-md { display: flex; flex-direction: column; gap: 1.1rem; }
+  .stack-sm { display: flex; flex-direction: column; gap: .7rem; }
+  .tophead { margin-bottom: 2.2rem; }
+
+  /* ---------- COVER ---------- */
+  #cover { background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%); overflow: hidden; }
+  #cover .peaks { position: absolute; inset: auto 0 0 0; width: 100%; height: 42%; opacity: .5; pointer-events: none; }
+  #cover .glow { position: absolute; top: -12%; right: -6%; width: 46vw; height: 46vw; border-radius: 50%;
+    background: radial-gradient(circle, var(--brand-ghost) 0%, transparent 66%); pointer-events: none; }
+  .cover-team { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 2.2rem; }
+
+  /* ---------- CHROME ---------- */
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--brand); width: 0%; z-index: 50; transition: width .3s ease; }
+  @media (prefers-reduced-motion: reduce){ .progress { transition: none; } }
+  .chrome-tr { position: fixed; top: 1rem; right: 1.1rem; z-index: 50; display: flex; align-items: center; gap: .6rem; }
+  .counter { font-family: "IBM Plex Mono", monospace; font-size: .78rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--line); padding: .3rem .55rem; border-radius: 8px; backdrop-filter: blur(6px); }
+  .counter b { color: var(--ink); }
+  .nav { position: fixed; bottom: 1.1rem; right: 1.1rem; z-index: 50; display: flex; gap: .5rem; }
+  .deckmark { position: fixed; bottom: 1.15rem; left: 1.2rem; z-index: 50; font-family: "IBM Plex Mono", monospace; font-size: .74rem; color: var(--muted); letter-spacing: .04em; display: flex; align-items: center; gap: .5rem; }
+  .deckmark .pk { color: var(--brand); font-weight: 600; }
+  button.ui {
+    font-family: "IBM Plex Mono", monospace; font-size: .8rem; color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--line);
+    border-radius: 9px; padding: .45rem .7rem; cursor: pointer; backdrop-filter: blur(6px);
+    display: inline-flex; align-items: center; gap: .4rem; line-height: 1;
+  }
+  button.ui:hover { border-color: var(--brand); color: var(--brand); }
+  button.ui:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  button.ui[disabled] { opacity: .35; cursor: default; }
+
+  .footnote { font-family: "IBM Plex Mono", monospace; font-size: .74rem; color: var(--muted); margin-top: 1.6rem; }
+
+  @media (max-width: 780px) {
+    body { font-size: 16px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .split { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: 1fr; }
+    .flow .arrow { transform: rotate(90deg); }
+    .deckmark { display: none; }
+  }
+</style>
+
+<div class="progress" id="progress"></div>
+<div class="chrome-tr">
+  <span class="counter"><b id="cur">01</b> / <span id="tot">11</span></span>
+  <button class="ui" id="theme" aria-label="Toggle light or dark theme">◐ Theme</button>
+</div>
+<div class="deckmark"><span class="pk">◈ ShelfSignal</span> · NorthPeak Retail</div>
+<div class="nav">
+  <button class="ui" id="prev" aria-label="Previous slide">←</button>
+  <button class="ui" id="next" aria-label="Next slide">→</button>
+</div>
+
+<div class="deck" id="deck">
+<!-- ============ 01 · COVER ============ -->
+<section class="slide" id="cover">
+  <div class="glow" aria-hidden="true"></div>
+  <svg class="peaks" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="0,300 180,150 320,210 480,70 640,180 820,40 980,160 1120,90 1200,140 1200,300"
+      fill="none" stroke="var(--brand)" stroke-width="2" opacity="0.55"/>
+    <polyline points="0,300 160,220 340,250 520,150 700,230 900,130 1080,220 1200,180 1200,300"
+      fill="none" stroke="var(--brand)" stroke-width="1.4" opacity="0.28"/>
+  </svg>
+  <div class="wrap">
+    <p class="eyebrow">Databricks · AI Customer Challenge · Team LAKE</p>
+    <h1>Put the right product<br>in front of every customer.</h1>
+    <p class="lead" style="margin-top:1.5rem;">
+      Wrong-store inventory quietly costs <b>NorthPeak</b> <b style="color:var(--crit)">~$200M a year</b>:
+      sales lost to empty shelves, margin given away in markdowns. <b>ShelfSignal</b> is a live, governed
+      store-ops app that spots the shortfall, prescribes the recovery move, and lets a manager act on it
+      before the sale walks out the door, with the AI inside it bounded, visible, and attributable.
+    </p>
+    <div class="cover-team">
+      <span class="chip brand"><span class="dot"></span> One connected solution</span>
+      <span class="chip"><span class="dot"></span> Lakebase</span>
+      <span class="chip"><span class="dot"></span> Databricks Apps</span>
+      <span class="chip"><span class="dot"></span> Unity Gateway</span>
+    </div>
+    <p class="footnote">30-minute pitch + live demo · for the business & technical executives at NorthPeak Retail</p>
+  </div>
+</section>
+
+<!-- ============ 02 · THE PROBLEM ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow crit">The problem · in their words</p>
+      <h2>Two leaks. One root cause.</h2>
+      <p class="lead" style="margin-top:1rem;">Every day, real customers walk in ready to buy and walk out empty-handed. To NorthPeak that isn't a data problem. It's <b style="color:var(--crit)">~$200M a year</b> walking out the door.</p>
+    </div>
+    <div class="split">
+      <div class="stack-md">
+        <div class="rail crit">
+          <h3>Stockouts</h3>
+          <p style="color:var(--ink-soft);margin-top:.4rem;">A shopper comes in for a product, the shelf is empty. The demand was real, but the sale is lost, and they often buy the rest of the basket somewhere else.</p>
+        </div>
+        <div class="rail" style="border-color:var(--warn)">
+          <h3>Markdowns</h3>
+          <p style="color:var(--ink-soft);margin-top:.4rem;">The reverse: product sitting in the wrong stores that won't sell at full price, discounted to clear the shelf. The margin is given away.</p>
+        </div>
+        <p class="lead" style="font-size:1.05rem;">Both come from the same thing: <b>inventory in the wrong store at the wrong time</b>, and nobody sees it until it's too late to move.</p>
+      </div>
+      <div class="cards grid-2">
+        <div class="card stat loss"><span class="big num">~$80M</span><span class="lbl">Lost revenue / yr · stockouts (~4% of sales)</span></div>
+        <div class="card stat bleed"><span class="big num">~$120M</span><span class="lbl">Margin given away / yr · markdowns</span></div>
+        <div class="card stat loss" style="grid-column:1 / -1;"><span class="big num">~$200M<span style="font-size:1.4rem;color:var(--muted)"> / yr</span></span><span class="lbl">Combined, the number Priya owns</span></div>
+      </div>
+    </div>
+    <div style="margin-top:2.2rem;" class="rail crit">
+      <p class="quote">"Which stores act differently tomorrow because of this?"</p>
+      <p class="attrib"><b>Priya Raghavan</b>, SVP Retail Operations</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03 · THE GAP ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow">Why it keeps happening</p>
+      <h2>The data is solid. It's just a day late.</h2>
+    </div>
+    <div class="split">
+      <ul class="ticks">
+        <li>Sales, inventory, and product data already land in the lakehouse.</li>
+        <li>It feeds BI dashboards and demand-forecasting models.</li>
+        <li>Governance and lineage on the analytical side are strong.</li>
+        <li><b style="color:var(--ink)">But everything is reported after the fact.</b> Dashboards refresh on a schedule, so store ops act on yesterday's picture instead of what's on the shelf right now.</li>
+      </ul>
+      <div class="card">
+        <p class="eyebrow" style="margin-bottom:.9rem;">Batch → real-time</p>
+        <div class="stack-sm">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:.7rem;border-bottom:1px solid var(--line-soft)">
+            <span class="mono" style="color:var(--muted)">TODAY</span>
+            <span style="color:var(--ink-soft)">Nightly batch · "yesterday's shelf"</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:.4rem;">
+            <span class="mono" style="color:var(--pos)">SHELFSIGNAL</span>
+            <span style="color:var(--ink)">Live view · action <b>today</b></span>
+          </div>
+        </div>
+        <p style="margin-top:1.1rem;color:var(--ink-soft);font-size:.95rem;">The ask isn't a new dashboard. It's the same governed data, turned into a decision on the floor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 · THE SOLUTION ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow">The solution · one connected product</p>
+      <h2>Governed data → a decision → governed AI.</h2>
+      <p class="lead" style="margin-top:1rem;">Not three projects. One arc: the operational data layer feeds the app, the app surfaces and prescribes the move, and every AI call inside it runs under a cost-and-safety control plane.</p>
+    </div>
+    <div class="flow">
+      <div class="node">
+        <span class="k">01 · Lakebase</span>
+        <h3>The live data layer</h3>
+        <p>Governed UC data synced to Postgres for low-latency reads, writable tables for actions, native hybrid search, with no second database and no data leaving the account.</p>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node">
+        <span class="k">02 · Apps</span>
+        <h3>The decision</h3>
+        <p>A live view that flags the shortfall, an assistant that explains why and runs what-ifs, and a write-back action a manager approves. A closed loop.</p>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node">
+        <span class="k">03 · Unity Gateway</span>
+        <h3>The guardrails</h3>
+        <p>Every AI call bounded by budget, blocked from runaway reads, and traced in inference tables, so spend stays capped, visible, and attributable per store.</p>
+      </div>
+    </div>
+    <p class="footnote">Pitch note: present these as one solution. Judges score "all three connected and demonstrated as one" (5 pts).</p>
+  </div>
+</section>
+
+<!-- ============ 05 · LIVE DEMO ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow pos">Live demo · the hero moment</p>
+      <h2>"Store 214 is short on a top product.<br>What's the best recovery move?"</h2>
+    </div>
+    <div class="split">
+      <div class="stack-md">
+        <p class="lead" style="font-size:1.05rem;">Walk the room through one decision, end to end:</p>
+        <ul class="ticks pos">
+          <li><b style="color:var(--ink)">Surface</b>: the live view flags Store 214, ranked by lost-sales risk.</li>
+          <li><b style="color:var(--ink)">Explain</b>: the assistant says <i>why</i>, pulling the records from Lakebase Search.</li>
+          <li><b style="color:var(--ink)">Prescribe</b>: transfer vs. expedite vs. substitute, with the trade-offs costed.</li>
+          <li><b style="color:var(--ink)">Act</b>: the manager approves; the decision writes back and shows on the next read.</li>
+        </ul>
+      </div>
+      <div class="placeholder" style="min-height:260px;justify-content:center;">
+        <span class="tag">Live demo goes here</span>
+        <p><b>Drop in the real thing:</b> screen-record or run the ShelfSignal app live against Store 214. Show the flag → the explanation → the costed options → the approved write-back appearing on refresh.</p>
+        <p style="color:var(--muted);font-size:.85rem;">Tailor the walkthrough to the audience. Rehearse it so it runs flawlessly. This is 5 of 30 points, and it's the "wow."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 06 · BUSINESS VALUE ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow pos">Business value · the outcomes we defend</p>
+      <h2>What changes on the floor.</h2>
+    </div>
+    <div class="cards grid-4">
+      <div class="card stat win"><span class="big num">~$10M</span><span class="lbl">Revenue recaptured / yr · fewer stockouts</span></div>
+      <div class="card stat win"><span class="big num">~$12M</span><span class="lbl">Margin protected / yr · earlier markdowns</span></div>
+      <div class="card stat brand"><span class="big">Real-time</span><span class="lbl">Batch latency → store action</span></div>
+      <div class="card stat brand"><span class="big">Capped</span><span class="lbl">AI spend · auditable</span></div>
+    </div>
+    <div class="split" style="margin-top:2rem;">
+      <div class="rail pos">
+        <p class="quote" style="font-size:1.4rem;">Revenue, margin, speed, and risk: the four levers Priya is measured on, moving in the same quarter.</p>
+      </div>
+      <div class="placeholder">
+        <span class="tag">Your numbers</span>
+        <p>Swap in the outcome figures your solution actually supports, and tie each back to a metric in your gold tables / metric view (<span class="mono">mv_store_position</span>) so you can defend it under questioning.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 · AI SPEND ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow">What the AI costs · bounded, visible, attributable</p>
+      <h2>The $1,200 weekend can't happen again.</h2>
+    </div>
+    <div class="split">
+      <div class="stack-md">
+        <div class="rail crit">
+          <p style="color:var(--ink-soft)">One assistant call left running overnight became a two-hour query that cost <b style="color:var(--crit)">$1,200</b>, and with no tracing in place, nobody could even tell what it did.</p>
+        </div>
+        <div class="stack-sm">
+          <span class="chip brand"><span class="dot"></span> Budgets block calls over threshold</span>
+          <span class="chip brand"><span class="dot"></span> Guardrails stop runaway all-data reads</span>
+          <span class="chip brand"><span class="dot"></span> Inference tables trace every call</span>
+          <span class="chip brand"><span class="dot"></span> Attributable per store &amp; per initiative</span>
+        </div>
+        <div class="rail">
+          <p class="quote" style="font-size:1.3rem;">"What does a recommendation cost, and what share of company AI spend is this?"</p>
+          <p class="attrib"><b>Amara Nwachukwu</b>, VP Finance, Technology</p>
+        </div>
+      </div>
+      <div class="placeholder" style="min-height:300px;justify-content:center;">
+        <span class="tag">Unity Gateway usage dashboard</span>
+        <p><b>Show the dashboard, not the setup.</b> Present cost per recommendation, the budget ceiling, and the trace coverage across the app, the coding agent, and the MCP.</p>
+        <p style="color:var(--muted);font-size:.85rem;">Lead with the value ("~$200K/yr, capped and attributable"), not just the numbers. Do <i>not</i> walk through registering endpoints or writing policies. That's build work, not pitch material.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 08 · WHY DATABRICKS ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow">Why Databricks</p>
+      <h2>One governed platform. One control plane for AI cost.</h2>
+    </div>
+    <div class="cards grid-2">
+      <div class="card">
+        <h3>Analytical &amp; operational on one platform</h3>
+        <p>The same governed Unity Catalog data serves the store floor at low latency, with no second operational database to stand up, sync, and reconcile.</p>
+      </div>
+      <div class="card">
+        <h3>Safe iteration, not risky changes</h3>
+        <p>Branch off production in seconds, let a coding agent evolve the schema, validate, then promote. Nothing touches the live instance until it's proven.</p>
+      </div>
+      <div class="card">
+        <h3>Retrieval that never leaves the account</h3>
+        <p>Native hybrid search over the operational data, so the assistant grounds its answers without shipping records to an outside service.</p>
+      </div>
+      <div class="card">
+        <h3>Governed AI by default</h3>
+        <p>One gateway caps spend, enforces guardrails, and traces every call, so cost and safety are platform properties, not per-app afterthoughts.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 09 · PERSONAS ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow">Who's in the room</p>
+      <h2>Four people. Four questions we answer.</h2>
+    </div>
+    <div class="cards grid-2">
+      <div class="card">
+        <span class="chip"><span class="dot"></span> Business</span>
+        <h3 style="margin:.7rem 0 .4rem;">Priya · SVP Retail Operations</h3>
+        <p>"Which stores act differently tomorrow?" → The live view + approved recovery actions, store by store.</p>
+      </div>
+      <div class="card">
+        <span class="chip"><span class="dot"></span> Business</span>
+        <h3 style="margin:.7rem 0 .4rem;">Amara · VP Finance, Technology</h3>
+        <p>"What does a recommendation cost?" → The gateway dashboard: capped, attributable, reconcilable spend.</p>
+      </div>
+      <div class="card">
+        <span class="chip brand"><span class="dot"></span> Technical</span>
+        <h3 style="margin:.7rem 0 .4rem;">Tobias · Director, Data Engineering</h3>
+        <p>"Can this serve 400 stores without a nightly batch?" → Lakebase synced reads at low latency, no second DB.</p>
+      </div>
+      <div class="card">
+        <span class="chip brand"><span class="dot"></span> Technical</span>
+        <h3 style="margin:.7rem 0 .4rem;">Hector · Platform Engineering Lead</h3>
+        <p>"Can I explain why the app said that, and show my work?" → Inference-table traces back to the records behind every recommendation.</p>
+      </div>
+    </div>
+    <p class="footnote">Tell the judges which personas they're playing before you begin. Speak to each in their own language (5 pts).</p>
+  </div>
+</section>
+
+<!-- ============ 10 · TECHNICAL DEPTH ============ -->
+<section class="slide">
+  <div class="wrap">
+    <div class="tophead">
+      <p class="eyebrow">Technical depth · expect the hard questions</p>
+      <h2>Built to be defended.</h2>
+    </div>
+    <div class="split">
+      <div class="stack-md">
+        <div class="rail">
+          <h3>"Will it hold at 400 stores?"</h3>
+          <p style="color:var(--ink-soft);margin-top:.35rem;font-size:.97rem;">Synced UC table → Postgres for low-latency reads; writable tables isolate app state; reverse sync (SCD2) streams decisions back to Delta.</p>
+        </div>
+        <div class="rail">
+          <h3>"Was it the model or the data?"</h3>
+          <p style="color:var(--ink-soft);margin-top:.35rem;font-size:.97rem;">Every recommendation is traceable through inference tables to the inventory and order records behind it, so Hector can show his work in writing.</p>
+        </div>
+        <div class="rail">
+          <h3>"How do you know spend is bounded?"</h3>
+          <p style="color:var(--ink-soft);margin-top:.35rem;font-size:.97rem;">Budgets reject calls over threshold; a guardrail blocks all-data reads; the block itself is captured in the trace as proof it fired.</p>
+        </div>
+      </div>
+      <div class="card">
+        <p class="eyebrow" style="margin-bottom:.9rem;">Evidence the build stands on</p>
+        <div class="kv">
+          <span class="mono">sync</span><span>Governed UC table → Lakebase, as code (DABs / Terraform)</span>
+          <span class="mono">branch</span><span>Dev branch off main; agent change validated &amp; promoted</span>
+          <span class="mono">search</span><span>Lakebase hybrid search, retrieval stays in-account</span>
+          <span class="mono">write-back</span><span>Approved action commits, reflected on next read</span>
+          <span class="mono">gateway</span><span>Budget block + guardrail block, both traced</span>
+        </div>
+        <p style="margin-top:1.1rem;color:var(--muted);font-size:.85rem;">Config alone isn't proof. Every claim above ties to an export that shows it actually happened.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 11 · CLOSE ============ -->
+<section class="slide" id="close">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <p class="eyebrow pos">The ask</p>
+    <h2>Governed data, on the floor, today,<br>with the AI on a leash.</h2>
+    <div class="cards grid-3" style="margin-top:2.2rem;">
+      <div class="card stat win"><span class="big num">~$22M</span><span class="lbl">Revenue + margin, per year</span></div>
+      <div class="card stat brand"><span class="big">Real-time</span><span class="lbl">Decision at the shelf</span></div>
+      <div class="card stat brand"><span class="big">Capped</span><span class="lbl">AI spend, fully traced</span></div>
+    </div>
+    <p class="lead" style="margin-top:2rem;">One platform. One connected solution. Built to run at 400 stores, safe to iterate on, and cheap to trust.</p>
+    <p class="footnote">Questions welcome throughout · ShelfSignal for NorthPeak Retail · Team LAKE</p>
+  </div>
+</section>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    // ---- theme ----
+    var stored = null;
+    try { stored = localStorage.getItem("ss-theme"); } catch (e) {}
+    if (stored === "dark" || stored === "light") root.setAttribute("data-theme", stored);
+    document.getElementById("theme").addEventListener("click", function () {
+      var isDark = getComputedStyle(root).getPropertyValue("--bg").trim().indexOf("#08") === 0;
+      // resolve current effective theme robustly
+      var explicit = root.getAttribute("data-theme");
+      var effective = explicit || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      var nextTheme = effective === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", nextTheme);
+      try { localStorage.setItem("ss-theme", nextTheme); } catch (e) {}
+    });
+
+    // ---- slide tracking ----
+    var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+    var deck = document.getElementById("deck");
+    var curEl = document.getElementById("cur");
+    var totEl = document.getElementById("tot");
+    var bar = document.getElementById("progress");
+    var prevBtn = document.getElementById("prev");
+    var nextBtn = document.getElementById("next");
+    var idx = 0;
+    totEl.textContent = String(slides.length).padStart(2, "0");
+
+    function pad(n){ return String(n + 1).padStart(2, "0"); }
+    function render(){
+      curEl.textContent = pad(idx);
+      bar.style.width = ((idx) / (slides.length - 1) * 100) + "%";
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === slides.length - 1;
+    }
+    function go(n){
+      idx = Math.max(0, Math.min(slides.length - 1, n));
+      deck.scrollTo({ left: idx * deck.clientWidth, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      render();
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          var i = slides.indexOf(e.target);
+          if (i > -1) { idx = i; render(); }
+        }
+      });
+    }, { root: deck, threshold: 0.55 });
+    slides.forEach(function (s) { io.observe(s); });
+
+    prevBtn.addEventListener("click", function(){ go(idx - 1); });
+    nextBtn.addEventListener("click", function(){ go(idx + 1); });
+    window.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) { e.preventDefault(); go(idx + 1); }
+      else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(idx - 1); }
+      else if (e.key === "Home") { e.preventDefault(); go(0); }
+      else if (e.key === "End") { e.preventDefault(); go(slides.length - 1); }
+    });
+    window.addEventListener("resize", function () {
+      deck.scrollTo({ left: idx * deck.clientWidth, behavior: "auto" });
+    });
+    render();
+  })();
+</script>

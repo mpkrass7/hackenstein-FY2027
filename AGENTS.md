@@ -1,70 +1,73 @@
-# NorthPeak Retail — Agent Session Context
+# AGENTS.md
 
-## Team
+Working notes for anyone (human or AI) touching this repo.
 
-Marshall Krassenstein & Logan — pair-building with Genie Code as the primary authoring tool.
+## What this repo is
 
-## Why We're Doing This
+The **ShelfSignal** pitch deck for the FE Tech Summit FY27 AI Customer Challenge
+(customer scenario: NorthPeak Retail). The deck is a single self-contained HTML file
+served live via **GitHub Pages**.
 
-This is for **Tech Summit FY27 Live Days** — a mandatory enablement sprint ("AI Customer Challenge"). The format: adopt a customer scenario, complete three connected builds (Lakebase, Apps, Unity Gateway), and submit to rank against other teams. Genie Code is the default build tool. We're iterating through the milestones with the agent doing the heavy lifting.
+- **Live URL:** https://mpkrass7.github.io/hackenstein-FY2027/
+- **The deck:** `index.html` (one file, no build step, no dependencies except Google Fonts).
+- **Repo is PUBLIC.** Only publish what is safe to be public.
 
-## Project Overview
+## Updating the presentation (do this often)
 
-Retail stockout & markdown rescue app. A cold snap caused 5 cold-weather apparel SKUs to sell out in ~30 northern stores while piling up unsold in ~40 southern stores. We're building the full stack: data pipeline → dashboard → Genie → Lakebase → app → AI Gateway.
+The deck is plain HTML. To change it and push the update live:
 
-## Environment
+```bash
+# 1. edit index.html (content lives in the <section class="slide"> blocks)
+# 2. preview locally — just open the file in a browser:
+open index.html            # macOS
 
-- **Catalog**: `adminbox_catalog`
-- **Schema**: `northpeak_retail`
-- **Volume**: `/Volumes/adminbox_catalog/northpeak_retail/raw_data/`
-- **Project folder**: `/Users/marshall.krassenstein@databricks.com/northpeak-retail/`
+# 3. ship it
+git add index.html
+git commit -m "deck: <what changed>"
+git push origin master
+```
 
-## Key Data Anchors
+GitHub Pages rebuilds automatically on every push to `master`. The live site
+updates in **~1 minute** (hard-refresh with Cmd+Shift+R to skip the browser cache).
 
-- **Hero store**: `STORE-0214` (Denver, CO — North)
-- **Hero SKU**: `SKU-APP-04412` (Summit Down Parka)
-- **Surplus store**: `STORE-0377` (Colorado Springs, CO — Mixed, ~100mi from Denver)
-- **Affected SKUs**: 5 cold-weather apparel items
-- **Lost-sales exposure**: ~$4.8M (northern stockouts)
-- **Markdown exposure**: ~$5.6M (southern overstock)
+### First-time Pages setup (already done, for reference)
+```bash
+gh api -X POST repos/mpkrass7/hackenstein-FY2027/pages \
+  -f 'source[branch]=master' -f 'source[path]=/'
+# check status / URL:
+gh api repos/mpkrass7/hackenstein-FY2027/pages
+```
 
-## Raw Datasets (in UC Volume as parquet)
+## How the deck is built (so edits stay consistent)
 
-| Dataset | Rows | Notes |
-| --- | --- | --- |
-| stores | 400 | Climate-tagged (North/South/Mixed), GPS |
-| products | 1,998 | Includes 5 affected cold_weather SKUs with searchable descriptions |
-| sales | 3,309,000 | 18-month POS with cold-snap velocity divergence |
-| inventory_snapshots | 254,900 | North→0 on-hand, South→surplus, merch notes for ai_classify |
-| transfers | 40,000 | Historical recovery moves with outcomes (model training) |
-| store_traffic | 220,000 | Daily foot traffic |
+- **One file, no framework.** All CSS and JS are inline in `index.html`.
+- **Slides** are `<section class="slide">` blocks inside `<div class="deck">`. Add a
+  slide by copying an existing `<section>` and bumping the counter is automatic
+  (JS counts `.slide` elements).
+- **Navigation is horizontal** — the deck scrolls sideways. Arrow keys (← →),
+  space, PageUp/Down, Home/End, and the on-screen ← → buttons all work.
+- **Theming:** light + dark, driven by CSS tokens in `:root`. Respects the
+  viewer's OS theme; the ◐ Theme button toggles and remembers the choice.
+- **Palette is semantic:** red = loss/stockout (`--crit`), amber = markdown
+  (`--warn`), green = recovery/win (`--pos`), blue = brand accent (`--brand`).
+- **Fonts:** Bricolage Grotesque (display), Inter (body), IBM Plex Mono (labels/data).
+- **Placeholders:** the dashed blue `.placeholder` blocks mark where the team's
+  real live-demo screenshots and real numbers go. Replace them before presenting.
 
-## Milestone Progress
+## House rules
 
-- [x] **1.1** — Data generation (job run completed successfully)
-- [x] **1.2** — Data exploration notebook (all validations passed)
-- [ ] **1.3** — SDP pipeline (silver + gold + heuristic recommendations)
-- [ ] **1.4** — Metric view `mv_store_position`
-- [ ] **1.5** — AI/BI dashboard + Genie space
-- [ ] **1.6** — (Optional) ML recovery model
-- [ ] **2.1** — Lakebase instance + dev branch
-- [ ] **2.2** — Sync gold tables (read-only)
-- [ ] **2.3** — Writable `ops_actions` table
-- [ ] **2.4** — Lakebase Search on products
-- [ ] **3.x** — Databricks App
-- [ ] **4.x** — Unity AI Gateway
+- **NO EM DASHES.** Marshall does not want em dashes (—) anywhere in the copy.
+  Use periods, commas, colons, or rephrase. This is not negotiable.
+- Keep the deck a single self-contained file. If you must add an asset, commit it
+  to the repo and reference it with a relative path (Google Fonts is the only
+  allowed external host).
+- Keep copy tight. No filler.
 
-## Conventions
+## What stays PRIVATE (gitignored — never commit to this public repo)
 
-- **Session summaries**: Following [Genie Code best practices](https://github.com/mkgs-databricks-demos/genieCodeWorkshop/blob/main/docs/conventions/genie-code-best-practices.md#session-summaries). Summaries live in `fixtures/sessions/` with an `INDEX.md` (reverse-chronological) and individual `YYYY-MM-DD_short-description.md` files. Always use `datetime.now()` for dates.
-- **Code style**: Per user preferences — docstrings, type hints, isort imports at top, annotated cells with markdown headers, clean and non-verbose.
-- **Asset location**: All created files go in this project folder. Transformation code under `./transformation/`, dashboard + Genie at root.
+- `challenge.md` — the full internal challenge requirements (rubric, internal URLs).
+- `challenge-page.html` — raw capture of the internal Skills Navigator app page.
+- `.databricks/`, `.isaac/`, `images/` — local/internal working files.
 
-## Architecture Notes
-
-- **No bronze layer** — raw parquet in Volume → SDP silver reads via `read_files()`
-- **`ai_classify` trick** — dedup distinct `merch_note_text` values into a small MV, classify once per unique string, join back
-- **Pipeline heuristic** builds `gold_recovery_recommendations` (no ML required) — ranks transfer/expedite/substitute by net value
-- **Transfer wins for hero** because STORE-0377 is nearby, same region, with surplus
-- **Metric view** `mv_store_position` is the single source of truth for exposure KPIs — dashboard, Genie, and app all read it
-- **All files created** go in project folder: transformation code under `./transformation/`, dashboard + Genie at root
+These are in `.gitignore`. Do not force-add them. If the team needs the challenge
+requirements shared, use an internal channel, not this public repo.
