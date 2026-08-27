@@ -1,0 +1,18 @@
+AGENT CHANGE — promotion evidence
+=================================
+
+Change: additive migration 0001_add_expected_recovery_date.sql on ops.ops_actions
+Author: Logan Carlson <logan.carlson@databricks.com>
+Trailer: Co-authored-by: Cursor Agent (Claude Opus) <cursor-agent@cursor.com>
+
+1) Iterated on Lakebase DEV branch (projects/northpeak-retail/branches/dev):
+   ALTER TABLE ops.ops_actions ADD COLUMN expected_recovery_date; backfill -> UPDATE 3 (validated).
+
+2) Promoted to Lakebase PRODUCTION branch (projects/northpeak-retail/branches/production):
+   same migration applied -> UPDATE 3 (validated below).
+
+3) Promoted in git: merged feature branch into master (no-ff):
+   b589bfc Merge build1/lakebase-agent-change: promote expected_recovery_date migration
+
+App-still-works: read-only synced table app.store_sku_position still serves 126889 rows;
+the additive column did not break existing reads.
