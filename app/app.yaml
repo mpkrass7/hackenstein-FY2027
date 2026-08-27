@@ -32,6 +32,20 @@ env:
   - name: NODE_ENV
     value: production
 
+  # ── Plain values (normally injected by finalize_app.sh from the setup job;
+  #    set statically here since this DAB deploys the app on its own). These
+  #    resolve config/app.json's ${DEMO_CATALOG}/${GENIE_SPACE_ID}/… placeholders.
+  - name: DEMO_CATALOG
+    value: adminbox_catalog
+  - name: DEMO_SCHEMA
+    value: northpeak_retail
+  - name: GENIE_SPACE_ID
+    value: 01f1a2400b8c16d0a85c77a6d8054843
+  - name: DASHBOARD_ID
+    value: 01f1a241ead61daf9218520f5a644029
+  - name: LAKEBASE_PROJECT_ID
+    value: northpeak-retail
+
   # ── Binding-derived ─────────────────────────────────────────────────
   # AppKit's ResourceRegistry expects DATABRICKS_WAREHOUSE_ID and the
   # standard PG* vars from the postgres binding (PGHOST/PGDATABASE/PGUSER

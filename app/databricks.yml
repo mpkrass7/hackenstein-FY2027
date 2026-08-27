@@ -1,0 +1,73 @@
+# App-only DAB for the NorthPeak Store Ops Databricks App.
+#
+# Kept SEPARATE from the repo-root workshop bundle on purpose: that bundle
+# provisions the schema/volume/setup-job (and defaults to a different catalog),
+# and `bundle deploy` is all-or-nothing per bundle. This bundle deploys ONLY
+# the app, so we never disturb the data layer that already lives in
+# adminbox_catalog.northpeak_retail.
+#
+# Deploy (from this app/ directory):
+#   1. ./scripts/build-app.sh                 # build dist/ + client/dist/ + drizzle/ locally
+#   2. databricks bundle validate --profile adminbox
+#   3. databricks bundle deploy   --profile adminbox   # syncs source + prebuilt dist/, binds resources
+#   4. databricks bundle run northpeak_store_ops --profile adminbox   # start the app
+#
+# app.yaml holds the runtime env + OBO scopes; the resource BINDINGS below feed
+# app.yaml's `valueFrom: sql-warehouse` / `valueFrom: postgres`.
+bundle:
+  name: northpeak-store-ops
+
+variables:
+  warehouse_id:
+    description: SQL warehouse for the analytics plugin + the boot-time Delta->Lakebase sync.
+    default: 6e457fea709b1f18
+  lakebase_branch:
+    description: Lakebase branch resource path the app binds to (Build 2 = the dev branch, keeping production clean).
+    default: projects/northpeak-retail/branches/dev
+  lakebase_database:
+    description: Lakebase database resource path the app binds to.
+    default: projects/northpeak-retail/branches/dev/databases/db-northpeak
+
+# Force-ship the gitignored build outputs, and HARD-exclude the heavy stuff.
+# DAB resolves .gitignore from the git repo ROOT (the parent dir), so the nested
+# app/.gitignore is NOT honored for sync — node_modules (750MB / 70k files, with
+# macOS-native binaries that'd break the Linux container) must be excluded here
+# explicitly. The container runs its own `npm install` from the shipped lockfile.
+sync:
+  include:
+    - dist/**
+    - client/dist/**
+    - drizzle/**
+  exclude:
+    - node_modules/**
+    - .databricks/**
+    - .smoke-test/**
+    - playwright-report/**
+    - test-results/**
+    - "**/*.bak"
+    - ".preview.pgid"
+
+resources:
+  apps:
+    northpeak_store_ops:
+      name: northpeak-store-ops
+      description: "NorthPeak Store Ops — stockout & markdown rescue operational app (Build 2)."
+      source_code_path: .
+      resources:
+        # Resource NAME must equal app.yaml's `valueFrom` key.
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        - name: postgres
+          postgres:
+            branch: ${var.lakebase_branch}
+            database: ${var.lakebase_database}
+            permission: CAN_CONNECT_AND_CREATE
+
+targets:
+  # No `mode: development` on purpose — dev mode prefixes the app name
+  # ([dev user] ...), which would create a NEW app instead of updating the
+  # existing `northpeak-store-ops`. Plain target = literal name.
+  dev:
+    default: true

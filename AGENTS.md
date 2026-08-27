@@ -43,16 +43,27 @@ Retail stockout & markdown rescue app. A cold snap caused 5 cold-weather apparel
 
 - [x] **1.1** — Data generation (job run completed successfully)
 - [x] **1.2** — Data exploration notebook (all validations passed)
-- [ ] **1.3** — SDP pipeline (silver + gold + heuristic recommendations)
-- [ ] **1.4** — Metric view `mv_store_position`
-- [ ] **1.5** — AI/BI dashboard + Genie space
-- [ ] **1.6** — (Optional) ML recovery model
-- [ ] **2.1** — Lakebase instance + dev branch
-- [ ] **2.2** — Sync gold tables (read-only)
-- [ ] **2.3** — Writable `ops_actions` table
-- [ ] **2.4** — Lakebase Search on products
-- [ ] **3.x** — Databricks App
-- [ ] **4.x** — Unity AI Gateway
+- [x] **1.3** — SDP pipeline (silver + gold + heuristic recommendations)
+- [x] **1.4** — Metric view `mv_store_position`
+- [x] **1.5** — AI/BI dashboard + Genie space
+- [x] **1.6** — ML recovery model (`gold_recovery_recommendations`)
+- [x] **2.1** — Lakebase instance + dev branch (`northpeak-retail`, branches `production` + `dev`)
+- [x] **2.2** — Sync gold tables (read-only)
+- [x] **2.3** — Writable `ops_actions` table
+- [x] **2.4** — Lakebase Search on products
+
+### 3.x — Databricks App (Build 2, `northpeak-store-ops`)
+
+- [ ] **3.1** — App deploy via DAB (`app/databricks.yml`): local build ships `dist/` + `client/dist/` + `drizzle/` + `package.json`/`package-lock.json`; binds `sql-warehouse` + `postgres` (Lakebase `dev` branch)
+- [ ] **3.2** — Visualize: live ranked shortfall view with a defined trigger (schedule/system update, not a person opening it)
+- [ ] **3.3** — Assist: agent explains *why* a position is flagged, runs what-if scenarios, and drafts the transfer/markdown memo — retrieving from the Build-1 Lakebase Search index
+- [ ] **3.4** — Act: write at least one action back to `ops_actions` with a human approving before commit (closed loop, reflected on next read)
+
+### 4.x — Unity AI Gateway (Build 3)
+
+- [ ] **4.1** — Route the app's agent LLM calls through an AI Gateway endpoint
+- [ ] **4.2** — Rate limits + budget guardrails on the gateway
+- [ ] **4.3** — AI-spend usage / observability dashboard (wire into the app's platform view + the deck's AI-spend slide)
 
 ## Conventions
 
