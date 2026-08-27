@@ -1,0 +1,43 @@
+{
+  "space_id": "01f1a2400b8c16d0a85c77a6d8054843",
+  "title": "NorthPeak Store Operations",
+  "description": "An early cold snap ~3 weeks ago left the same cold-weather styles SOLD OUT in the North (~$4.8M lost sales) and DEAD STOCK in the South (~$5.6M markdown exposure). Start with the headline numbers, then drill into which stores and SKUs are worst, and see the recovery model's recommendations.",
+  "warehouse_id": "6e457fea709b1f18",
+  "tables": [
+    "adminbox_catalog.northpeak_retail.mv_store_position",
+    "adminbox_catalog.northpeak_retail.gold_store_sku_position",
+    "adminbox_catalog.northpeak_retail.gold_open_shortfalls",
+    "adminbox_catalog.northpeak_retail.gold_recovery_recommendations"
+  ],
+  "instructions": "You analyze NorthPeak Retail store-operations data for Dana Ruiz (SVP Retail Operations, non-technical).\n\nCONTEXT: An early cold snap ~3 weeks ago flipped demand for cold-weather apparel. The SAME 5 SKUs (Summit Down Parka SKU-APP-04412 + 4 others) are STOCKED OUT in ~30 northern stores (real demand, lost sales) while sitting as DEAD STOCK in ~40 southern stores (markdown clock running). One misallocation, two symptoms.\n\nBASELINES: A healthy position has weeks_of_supply between ~1 and ~8. position_status is the single signal: 'stockout' (on_hand 0, still selling), 'at_risk' (<1 week supply), 'overstock' (>8 weeks + high markdown risk), 'healthy'.\n\nHEADLINE NUMBERS — always answer from mv_store_position (same definitions the dashboard tiles use):\n- 'How much are we losing to stockouts?' → MEASURE(lost_sales_exposure)\n- 'What is our markdown exposure?' → MEASURE(markdown_exposure)\n- 'How many positions are stocked out in the North?' → MEASURE(stockout_count) filtered climate_zone='North'\n\nINVESTIGATION FLOW:\n1. mv_store_position → MEASURE(stockout_count) + MEASURE(overstock_count) by climate_zone\n2. gold_store_sku_position → the divergence is confined to the 5 cold_weather apparel SKUs\n3. gold_open_shortfalls WHERE store_id='STORE-0214' → the hero shortfall\n4. gold_recovery_recommendations → the model recommends a move + predicted recaptured $\n\nRECOVERY FOLLOW-UP:\n- Best recovery move for Store 214 → gold_recovery_recommendations for that (store, SKU)\n- Total recapturable across all shortfalls → SUM(predicted_recaptured_usd)\n- Transfer vs expedite split → GROUP BY recommended_move",
+  "sample_questions": [
+    {
+      "question": "How much are we losing to stockouts, and what's our markdown exposure right now?",
+      "sql": "SELECT MEASURE(`lost_sales_exposure`) AS lost_sales_usd, MEASURE(`markdown_exposure`) AS markdown_usd FROM mv_store_position"
+    },
+    {
+      "question": "Where are we short and where are we over-stocked? Break it down by climate zone.",
+      "sql": "SELECT climate_zone, MEASURE(`stockout_count`) AS stockout_count, MEASURE(`overstock_count`) AS overstock_count FROM mv_store_position GROUP BY climate_zone"
+    },
+    {
+      "question": "Which products are driving both problems?",
+      "sql": "SELECT product_name, position_status, COUNT(1) AS position_count FROM gold_store_sku_position WHERE position_status IN ('stockout', 'overstock') GROUP BY product_name, position_status ORDER BY position_count DESC"
+    },
+    {
+      "question": "Store 214 is short on the Summit Down Parka — how bad is it, and is there stock nearby?",
+      "sql": "SELECT store_id, product_id, on_hand_units, avg_daily_velocity, nearest_surplus_store_id, nearest_surplus_on_hand, nearest_surplus_distance_km FROM gold_open_shortfalls WHERE store_id = 'STORE-0214' AND product_id = 'SKU-APP-04412'"
+    },
+    {
+      "question": "What's the best recovery move for Store 214, and how much would it recapture?",
+      "sql": "SELECT recommended_move, recommended_source_store_id, predicted_recaptured_usd, predicted_net_value_usd, move_ranking FROM gold_recovery_recommendations WHERE store_id = 'STORE-0214' AND product_id = 'SKU-APP-04412'"
+    },
+    {
+      "question": "Across all open shortfalls, how much could we recapture, and by which move?",
+      "sql": "SELECT recommended_move, COUNT(1) AS shortfall_count, SUM(predicted_recaptured_usd) AS total_recaptured_usd FROM gold_recovery_recommendations GROUP BY recommended_move ORDER BY total_recaptured_usd DESC"
+    },
+    {
+      "question": "Which southern stores are the biggest markdown risk on these SKUs?",
+      "sql": "SELECT store_name, city, product_name, on_hand_units, weeks_of_supply, markdown_exposure_usd FROM gold_store_sku_position WHERE position_status = 'overstock' AND climate_zone = 'South' ORDER BY markdown_exposure_usd DESC LIMIT 20"
+    }
+  ]
+}

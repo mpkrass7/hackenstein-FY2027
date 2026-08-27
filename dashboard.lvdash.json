@@ -1,0 +1,851 @@
+{
+  "pages": [
+    {
+      "name": "5c55d911-dd7a-4093-a420-c12f090cb3dc",
+      "displayName": "Operations",
+      "layout": [
+        {
+          "widget": {
+            "name": "eb3fca22-efd6-4198-9065-7a7068c06363",
+            "textbox_spec": "**NorthPeak Store Operations** | Dana Ruiz, SVP Retail Ops\n\nAn early cold snap \\~3 weeks ago left the same cold-weather styles **SOLD OUT** in the North (red \u2014 lost sales) and **DEAD STOCK** in the South (amber \u2014 markdown clock). This dashboard tracks the exposure and the recovery."
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "f6670c9b-b4db-48f9-acad-dca7fa650293",
+            "queries": [
+              {
+                "name": "4ce13ba1-adcc-45d4-8296-e91b331d11b3",
+                "query": {
+                  "datasetName": "ds_exposure",
+                  "fields": [
+                    {
+                      "name": "lost_sales_usd",
+                      "expression": "SUM(`lost_sales_usd`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "lost_sales_usd",
+                  "displayName": "Lost-Sales Exposure"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Lost-Sales Exposure"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ab382071-9e34-4ac1-818c-477f61ef2fd5",
+            "queries": [
+              {
+                "name": "87857458-51e8-4109-980b-5a8742a2b10b",
+                "query": {
+                  "datasetName": "ds_exposure",
+                  "fields": [
+                    {
+                      "name": "markdown_usd",
+                      "expression": "SUM(`markdown_usd`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "markdown_usd",
+                  "displayName": "Markdown Exposure"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Markdown Exposure"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "3119f2b9-4c0b-40fc-970f-f0f72df85ee5",
+            "queries": [
+              {
+                "name": "01e56dac-3a72-44ba-9b93-acd28f0236e6",
+                "query": {
+                  "datasetName": "ds_exposure",
+                  "fields": [
+                    {
+                      "name": "stockout_count",
+                      "expression": "SUM(`stockout_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "stockout_count",
+                  "displayName": "Stockout Positions"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Stockout Positions"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "758120e8-4a54-45d3-825f-a3bccd6a132b",
+            "queries": [
+              {
+                "name": "01558794-b0ba-488f-b19a-8cbd1638e0c7",
+                "query": {
+                  "datasetName": "ds_exposure",
+                  "fields": [
+                    {
+                      "name": "overstock_count",
+                      "expression": "SUM(`overstock_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "overstock_count",
+                  "displayName": "Overstock Positions"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Overstock Positions"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "932ccffe-55c1-48c8-bcfd-6214e995c702",
+            "queries": [
+              {
+                "name": "92d0800c-388f-4993-b37c-885c05a0d244",
+                "query": {
+                  "datasetName": "ds_positions",
+                  "fields": [
+                    {
+                      "name": "store_lat",
+                      "expression": "`store_lat`"
+                    },
+                    {
+                      "name": "store_lng",
+                      "expression": "`store_lng`"
+                    },
+                    {
+                      "name": "store_name",
+                      "expression": "`store_name`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "position_status",
+                      "expression": "`position_status`"
+                    },
+                    {
+                      "name": "on_hand_units",
+                      "expression": "`on_hand_units`"
+                    },
+                    {
+                      "name": "recent_units_7d",
+                      "expression": "`recent_units_7d`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "map",
+              "encodings": {
+                "geoCoordinates": {
+                  "latitude": {
+                    "fieldName": "store_lat"
+                  },
+                  "longitude": {
+                    "fieldName": "store_lng"
+                  }
+                },
+                "color": {
+                  "fieldName": "position_status",
+                  "scale": {
+                    "type": "categorical",
+                    "mapping": [
+                      {
+                        "value": "stockout",
+                        "color": "#E5484D"
+                      },
+                      {
+                        "value": "at_risk",
+                        "color": "#FFB020"
+                      },
+                      {
+                        "value": "overstock",
+                        "color": "#FFB020"
+                      },
+                      {
+                        "value": "healthy",
+                        "color": "#3C6997"
+                      }
+                    ]
+                  }
+                },
+                "size": {
+                  "fieldName": "recent_units_7d"
+                },
+                "tooltip": [
+                  {
+                    "fieldName": "store_name"
+                  },
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "on_hand_units"
+                  },
+                  {
+                    "fieldName": "recent_units_7d"
+                  },
+                  {
+                    "fieldName": "position_status"
+                  }
+                ]
+              },
+              "mark": {
+                "opacity": 1
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Store positions on cold-weather apparel"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "10eded54-985f-46d1-9112-1a4cb16c145f",
+            "queries": [
+              {
+                "name": "a02e29de-c0cf-47dd-8bf9-0092020717b4",
+                "query": {
+                  "datasetName": "ds_exposure",
+                  "fields": [
+                    {
+                      "name": "climate_zone",
+                      "expression": "`climate_zone`"
+                    },
+                    {
+                      "name": "position_status",
+                      "expression": "`position_status`"
+                    },
+                    {
+                      "name": "position_count",
+                      "expression": "SUM(`position_count`)"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "climate_zone",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Climate Zone"
+                },
+                "y": {
+                  "fieldName": "position_count",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Position Count"
+                },
+                "color": {
+                  "fieldName": "position_status",
+                  "scale": {
+                    "type": "categorical",
+                    "mapping": [
+                      {
+                        "value": "stockout",
+                        "color": "#E5484D"
+                      },
+                      {
+                        "value": "at_risk",
+                        "color": "#FFB020"
+                      },
+                      {
+                        "value": "overstock",
+                        "color": "#FFB020"
+                      },
+                      {
+                        "value": "healthy",
+                        "color": "#3C6997"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Positions by climate zone & status"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "7e423cc8-e81c-46ce-a350-7107786bd646",
+            "queries": [
+              {
+                "name": "aca80f2e-ac95-40c6-94b7-d2e9361dd098",
+                "query": {
+                  "datasetName": "ds_exposure",
+                  "fields": [
+                    {
+                      "name": "category",
+                      "expression": "`category`"
+                    },
+                    {
+                      "name": "total_exposure",
+                      "expression": "SUM(`lost_sales_usd`) + SUM(`markdown_usd`)"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_exposure",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Total Exposure ($)"
+                },
+                "y": {
+                  "fieldName": "category",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Category"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Exposure by category"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 8,
+            "width": 3,
+            "height": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "2c8d2df8-1a35-4bd8-82c7-b90dd09bb97b",
+      "displayName": "Recovery",
+      "layout": [
+        {
+          "widget": {
+            "name": "45242a78-5f2e-4c17-9547-b66e2636fb9e",
+            "textbox_spec": "**Recovery \u2014 what do we do about it?**\n\nThe worst shortfalls, the surplus that can cover them, and the model's recommended move with the revenue it recaptures."
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "9f54794a-1299-4d33-814a-adb50c31ab42",
+            "queries": [
+              {
+                "name": "1eaa1935-5c0e-4409-9622-6b8566b5e881",
+                "query": {
+                  "datasetName": "ds_positions",
+                  "fields": [
+                    {
+                      "name": "store_name",
+                      "expression": "`store_name`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "product_name",
+                      "expression": "`product_name`"
+                    },
+                    {
+                      "name": "on_hand_units",
+                      "expression": "`on_hand_units`"
+                    },
+                    {
+                      "name": "recent_units_7d",
+                      "expression": "`recent_units_7d`"
+                    },
+                    {
+                      "name": "lost_sales_exposure_usd",
+                      "expression": "`lost_sales_exposure_usd`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "filters": [
+                    {
+                      "expression": "`position_status` IN ('stockout', 'at_risk')"
+                    }
+                  ],
+                  "orders": [
+                    {
+                      "expression": "`lost_sales_exposure_usd`",
+                      "direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "store_name",
+                    "displayName": "Store"
+                  },
+                  {
+                    "fieldName": "city",
+                    "displayName": "City"
+                  },
+                  {
+                    "fieldName": "product_name",
+                    "displayName": "Product"
+                  },
+                  {
+                    "fieldName": "on_hand_units",
+                    "displayName": "On Hand"
+                  },
+                  {
+                    "fieldName": "recent_units_7d",
+                    "displayName": "7d Sales"
+                  },
+                  {
+                    "fieldName": "lost_sales_exposure_usd",
+                    "displayName": "Lost Sales ($)"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Worst stockouts (lost-sales)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "3a8c5550-230a-4e81-b9c3-a006c56f0bd6",
+            "queries": [
+              {
+                "name": "e1e070a0-2667-4d25-9589-4440c1e2f242",
+                "query": {
+                  "datasetName": "ds_positions",
+                  "fields": [
+                    {
+                      "name": "store_name",
+                      "expression": "`store_name`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "product_name",
+                      "expression": "`product_name`"
+                    },
+                    {
+                      "name": "on_hand_units",
+                      "expression": "`on_hand_units`"
+                    },
+                    {
+                      "name": "weeks_of_supply",
+                      "expression": "`weeks_of_supply`"
+                    },
+                    {
+                      "name": "markdown_exposure_usd",
+                      "expression": "`markdown_exposure_usd`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "filters": [
+                    {
+                      "expression": "`position_status` = 'overstock'"
+                    }
+                  ],
+                  "orders": [
+                    {
+                      "expression": "`markdown_exposure_usd`",
+                      "direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "store_name",
+                    "displayName": "Store"
+                  },
+                  {
+                    "fieldName": "city",
+                    "displayName": "City"
+                  },
+                  {
+                    "fieldName": "product_name",
+                    "displayName": "Product"
+                  },
+                  {
+                    "fieldName": "on_hand_units",
+                    "displayName": "On Hand"
+                  },
+                  {
+                    "fieldName": "weeks_of_supply",
+                    "displayName": "Wks Supply"
+                  },
+                  {
+                    "fieldName": "markdown_exposure_usd",
+                    "displayName": "Markdown Risk ($)"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Biggest markdown risk (overstock)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 1,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "1b9a4f33-b601-451e-ac72-1f8af4593388",
+            "queries": [
+              {
+                "name": "e57992dc-6748-47e7-8437-a328cb0811af",
+                "query": {
+                  "datasetName": "ds_recovery",
+                  "fields": [
+                    {
+                      "name": "recommended_move",
+                      "expression": "`recommended_move`"
+                    },
+                    {
+                      "name": "count",
+                      "expression": "COUNT(1)"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "recommended_move",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Move Type"
+                },
+                "y": {
+                  "fieldName": "count",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Count"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Recommended recovery move (mix)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "3e8504f5-19e7-4297-a0b7-6195e05d4da0",
+            "queries": [
+              {
+                "name": "c15c1010-f640-407a-b017-730849f355c8",
+                "query": {
+                  "datasetName": "ds_recovery",
+                  "fields": [
+                    {
+                      "name": "predicted_recaptured_usd",
+                      "expression": "SUM(`predicted_recaptured_usd`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "predicted_recaptured_usd",
+                  "displayName": "Total Predicted Recaptured Revenue"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total predicted recaptured revenue"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 4,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "8b85a16d-5b94-42de-be10-551bdddc0eb9",
+            "queries": [
+              {
+                "name": "b3b1e097-f1b5-41f9-a0f7-425f321ff175",
+                "query": {
+                  "datasetName": "ds_recovery",
+                  "fields": [
+                    {
+                      "name": "store_id",
+                      "expression": "`store_id`"
+                    },
+                    {
+                      "name": "product_id",
+                      "expression": "`product_id`"
+                    },
+                    {
+                      "name": "recommended_move",
+                      "expression": "`recommended_move`"
+                    },
+                    {
+                      "name": "recommended_source_store_id",
+                      "expression": "`recommended_source_store_id`"
+                    },
+                    {
+                      "name": "predicted_recaptured_usd",
+                      "expression": "`predicted_recaptured_usd`"
+                    },
+                    {
+                      "name": "predicted_net_value_usd",
+                      "expression": "`predicted_net_value_usd`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "expression": "`predicted_net_value_usd`",
+                      "direction": "DESC"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "store_id",
+                    "displayName": "Store"
+                  },
+                  {
+                    "fieldName": "product_id",
+                    "displayName": "Product"
+                  },
+                  {
+                    "fieldName": "recommended_move",
+                    "displayName": "Move"
+                  },
+                  {
+                    "fieldName": "recommended_source_store_id",
+                    "displayName": "Source Store"
+                  },
+                  {
+                    "fieldName": "predicted_recaptured_usd",
+                    "displayName": "Recaptured ($)"
+                  },
+                  {
+                    "fieldName": "predicted_net_value_usd",
+                    "displayName": "Net Value ($)"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Recovery recommendations"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 6,
+            "height": 3
+          }
+        }
+      ]
+    }
+  ],
+  "datasets": [
+    {
+      "name": "ds_exposure",
+      "displayName": "Exposure (metric view)",
+      "query": "SELECT climate_zone, region, category, position_status, MEASURE(`lost_sales_exposure`) AS lost_sales_usd, MEASURE(`markdown_exposure`) AS markdown_usd, MEASURE(`stockout_count`) AS stockout_count, MEASURE(`overstock_count`) AS overstock_count, MEASURE(`position_count`) AS position_count FROM mv_store_position GROUP BY ALL"
+    },
+    {
+      "name": "ds_positions",
+      "displayName": "Store positions",
+      "query": "SELECT store_id, store_name, region, climate_zone, city, store_lat, store_lng, product_id, product_name, category, seasonality, position_status, on_hand_units, recent_units_7d, weeks_of_supply, lost_sales_exposure_usd, markdown_exposure_usd, markdown_risk_score FROM gold_store_sku_position"
+    },
+    {
+      "name": "ds_recovery",
+      "displayName": "Recovery recommendations",
+      "query": "SELECT store_id, product_id, recommended_move, recommended_source_store_id, predicted_recaptured_usd, predicted_net_value_usd FROM gold_recovery_recommendations"
+    }
+  ]
+}
