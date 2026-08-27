@@ -27,6 +27,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Cell 2
 from __future__ import annotations
 
 import os
@@ -42,8 +43,8 @@ from pyspark.sql.window import Window
 # deploy this to any workspace.
 IN_NOTEBOOK = "dbutils" in dir()
 if IN_NOTEBOOK:
-    dbutils.widgets.text("catalog", "", "Catalog")
-    dbutils.widgets.text("schema", "", "Schema")
+    dbutils.widgets.text("catalog", "adminbox", "Catalog")
+    dbutils.widgets.text("schema", "northpeak_retail", "Schema")
     CATALOG = dbutils.widgets.get("catalog")
     SCHEMA = dbutils.widgets.get("schema")
 else:

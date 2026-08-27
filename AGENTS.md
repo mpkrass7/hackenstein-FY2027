@@ -10,9 +10,9 @@ Retail stockout & markdown rescue app. A cold snap caused 5 cold-weather apparel
 
 ## Environment
 
-- **Catalog**: `stablebox_catalog`
+- **Catalog**: `adminbox`
 - **Schema**: `northpeak_retail`
-- **Volume**: `/Volumes/stablebox_catalog/northpeak_retail/raw_data/`
+- **Volume**: `/Volumes/adminbox/northpeak_retail/raw_data/`
 - **Project folder**: `/Users/marshall.krassenstein@databricks.com/northpeak-retail/`
 
 ## Key Data Anchors
