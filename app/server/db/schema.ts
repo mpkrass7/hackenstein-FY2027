@@ -130,71 +130,13 @@ export const feedback = appSchema.table(
 // app SELECTs from them and never writes them.
 // ============================================================================
 
-// `gold_store_sku_position` — one row per store×SKU. The Operations map +
-// queue read this (filtered to the affected SKUs / open shortfalls). PK is
-// the composite (store_id, product_id); we mirror it as a synthetic `id`
-// `${store}:${product}` for the drizzle PK + the queue's row key.
-export const storeSkuPosition = appSchema.table(
-  'store_sku_position',
-  {
-    // Synthetic `${storeId}:${productId}`.
-    id: text('id').primaryKey(),
-    storeId: text('store_id').notNull(),
-    storeName: text('store_name'),
-    region: text('region'),
-    climateZone: text('climate_zone'),
-    city: text('city'),
-    // Store coordinates — drive the Operations store map. DOUBLE PRECISION.
-    storeLat: doublePrecision('store_lat'),
-    storeLng: doublePrecision('store_lng'),
-    productId: text('product_id').notNull(),
-    productName: text('product_name'),
-    category: text('category'),
-    subcategory: text('subcategory'),
-    seasonality: text('seasonality'),
-    onHandUnits: integer('on_hand_units'),
-    onOrderUnits: integer('on_order_units'),
-    recentUnits7d: integer('recent_units_7d'),
-    recentNetSales7d: doublePrecision('recent_net_sales_7d'),
-    avgDailyVelocity: doublePrecision('avg_daily_velocity'),
-    weeksOfSupply: doublePrecision('weeks_of_supply'),
-    priceUsd: doublePrecision('price_usd'),
-    // 0–1 from `ai_classify` in SDP — markdown risk on overstock rows.
-    markdownRiskScore: doublePrecision('markdown_risk_score'),
-    lostSalesExposureUsd: doublePrecision('lost_sales_exposure_usd'),
-    markdownExposureUsd: doublePrecision('markdown_exposure_usd'),
-    // 'stockout' | 'at_risk' | 'overstock' | 'healthy' — the UI colors the
-    // map + badges by this.
-    positionStatus: text('position_status', {
-      enum: ['stockout', 'at_risk', 'overstock', 'healthy'],
-    })
-      .notNull()
-      .default('healthy'),
-  },
-  (t) => [
-    index('position_store_idx').on(t.storeId),
-    index('position_status_idx').on(t.positionStatus),
-    index('position_product_idx').on(t.productId),
-  ],
-);
-
-// `gold_open_shortfalls` — the shortfall + its nearest surplus store. PK
-// is the composite (store_id, product_id); mirrored as synthetic `id`.
-export const openShortfalls = appSchema.table(
-  'open_shortfalls',
-  {
-    id: text('id').primaryKey(), // `${storeId}:${productId}`
-    storeId: text('store_id').notNull(),
-    productId: text('product_id').notNull(),
-    onHandUnits: integer('on_hand_units'),
-    avgDailyVelocity: doublePrecision('avg_daily_velocity'),
-    lostSalesExposureUsd: doublePrecision('lost_sales_exposure_usd'),
-    nearestSurplusStoreId: text('nearest_surplus_store_id'),
-    nearestSurplusOnHand: integer('nearest_surplus_on_hand'),
-    nearestSurplusDistanceKm: doublePrecision('nearest_surplus_distance_km'),
-  },
-  (t) => [index('shortfall_store_idx').on(t.storeId)],
-);
+// NOTE: `app.store_sku_position`, `app.open_shortfalls`, `app.products`, and
+// `app.products_search` are REAL Lakebase Synced Tables provisioned in Build 1
+// (owned by the Lakebase sync writer role in schema `app`). The app READS them
+// directly via schema-qualified raw SQL in `db/queries/stores.ts` — it does NOT
+// define or create them here, and `db/sync.ts` never writes them. Drizzle only
+// manages the app's own tables below (chat state, ops_actions, and the
+// recovery_recommendations mirror, which Build 1 does not sync).
 
 // Read-only mirror of the ML model's batch predictions table
 // (`{catalog}.{schema}.gold_recovery_recommendations`, written by the ML

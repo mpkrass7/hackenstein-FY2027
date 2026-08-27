@@ -10,7 +10,7 @@
     "dev": "tsx watch server/server.ts",
     "predev": "npm run db:generate",
     "build": "echo \"[build] no-op: dist/ is prebuilt locally (npm run build:source / scripts/build-app.sh) and shipped via the bundle. The Apps container just installs deps and runs dist/server.js.\"",
-    "build:source": "drizzle-kit generate && tsdown --config tsdown.server.config.ts && vite build --config client/vite.config.ts",
+    "build:source": "tsdown --config tsdown.server.config.ts && vite build --config client/vite.config.ts",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc -b",
     "typegen": "appkit typegen",

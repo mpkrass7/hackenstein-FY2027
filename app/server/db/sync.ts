@@ -1,47 +1,38 @@
 import { sql } from 'drizzle-orm';
 import { getExecutionContext } from '@databricks/appkit';
 import type { AppDb } from './index.js';
-import {
-  storeSkuPosition,
-  openShortfalls,
-  recoveryRecommendations,
-} from './schema.js';
+import { recoveryRecommendations } from './schema.js';
 import type { MoveOption } from './schema.js';
 
 /**
- * One-shot Delta → Lakebase sync — NorthPeak Store Ops.
+ * Boot-time Delta → Lakebase sync — NorthPeak Store Ops.
  *
- * > In production this is Lakebase Synced Tables (managed, continuous
- * > Delta→Lakebase replication with the same UC governance). For the demo
- * > build we keep it simple: a manual one-shot sync at boot, code we can
- * > show, no extra resource. Same outcome on screen.
+ * > Build 1 provisions REAL Lakebase Synced Tables for the read-only data the
+ * > app serves: `app.store_sku_position`, `app.open_shortfalls`,
+ * > `app.products`, `app.products_search`. Those are managed by the Lakebase
+ * > sync (owned by the sync writer role) and the app just READS them — it does
+ * > NOT sync or write them here.
  *
- * Pulls the three READ-ONLY Gold mirrors:
- *   - store_sku_position       (the affected + a sample of everyday positions)
- *   - open_shortfalls          (shortfall + nearest surplus)
- *   - recovery_recommendations (the ML model's ranked moves)
+ * The ONLY table this fills is `app.recovery_recommendations` — the ML model's
+ * ranked moves — because Build 1 does not sync that one. `ops_actions` and the
+ * chat tables are the app's own writable tables and start empty.
  *
- * `ops_actions` is the app's own WRITABLE table — never synced, starts empty.
- *
- * The recovery_recommendations table is BUILT BY THE TRAINEE (the ML step of
- * the workshop). So its query is fault-tolerant: if the table doesn't exist
- * yet, we log + leave the mirror empty rather than failing boot.
- *
- * Idempotent in the "only-if-destination-empty" sense — if the position
- * mirror has rows, we skip. Pass `{ forceIfAnyEmpty: true }` to re-sync
- * on demand (used by the "Reset demo" button).
+ * Fault-tolerant: if the recovery Gold table doesn't exist yet (the ML step),
+ * we log + leave the mirror empty rather than failing boot. Idempotent in the
+ * "only-if-empty" sense; pass `{ forceIfAnyEmpty: true }` to re-pull.
  */
 
 type DataConfig = {
   catalog: string;
   schema: string;
   tables: {
-    /** gold_store_sku_position — one row per store×SKU with geo + status. */
-    storeSkuPosition: string;
-    /** gold_open_shortfalls — shortfall + nearest surplus store. */
-    openShortfalls: string;
-    /** gold_recovery_recommendations — the ML model's ranked moves.
-     *  Built by the trainee; sync tolerates it not existing yet. */
+    // Present in config for the synced tables, but NOT synced here (Build 1
+    // Lakebase Synced Tables own them). Kept optional so the app config type
+    // stays a superset.
+    storeSkuPosition?: string;
+    openShortfalls?: string;
+    /** gold_recovery_recommendations — the ML model's ranked moves. The only
+     *  table synced here; Build 1 does not sync it. */
     recoveryRecommendations?: string;
   };
 };
@@ -51,201 +42,56 @@ export async function syncFromDelta(
   cfg: DataConfig,
   opts: { forceIfAnyEmpty?: boolean } = {},
 ): Promise<void> {
+  const recoveryTable = cfg.tables.recoveryRecommendations;
+  if (!recoveryTable) {
+    console.log(
+      '[sync] no recovery_recommendations Delta table configured — nothing to sync (store/shortfall/products come from Lakebase Synced Tables).',
+    );
+    return;
+  }
+
   const exists = await db.execute(
-    sql`SELECT COUNT(*)::int AS n FROM app.store_sku_position`,
+    sql`SELECT COUNT(*)::int AS n FROM app.recovery_recommendations`,
   );
   const n = (exists.rows[0] as { n: number } | undefined)?.n ?? 0;
   if (n > 0 && !opts.forceIfAnyEmpty) return;
 
   const warehouseId = process.env.DATABRICKS_WAREHOUSE_ID;
   if (!warehouseId) {
-    console.warn('[sync] DATABRICKS_WAREHOUSE_ID not set — skipping Delta sync');
+    console.warn('[sync] DATABRICKS_WAREHOUSE_ID not set — skipping recovery sync');
     return;
   }
 
-  console.log('[sync] Starting Delta → Lakebase sync (parallel)…');
+  console.log('[sync] Syncing recovery_recommendations Delta → Lakebase…');
   const t0 = Date.now();
+  const fq = `${cfg.catalog}.${cfg.schema}.${recoveryTable}`;
 
-  const fq = (name: 'storeSkuPosition' | 'openShortfalls' | 'recoveryRecommendations') =>
-    `${cfg.catalog}.${cfg.schema}.${cfg.tables[name]}`;
-
-  const hasRecoveryTable = Boolean(cfg.tables.recoveryRecommendations);
-
-  // Fire the position + shortfall queries in parallel (the slow part). The
-  // recovery-recommendations query is BEST-EFFORT (the trainee may not have
-  // built that Gold table yet), so run it defensively and swallow a
-  // TABLE_OR_VIEW_NOT_FOUND into an empty result.
-  const [positionRows, shortfallRows, recoveryRows] = await Promise.all([
-    execSql<{
-      store_id: string;
-      store_name: string | null;
-      region: string | null;
-      climate_zone: string | null;
-      city: string | null;
-      store_lat: number | null;
-      store_lng: number | null;
-      product_id: string;
-      product_name: string | null;
-      category: string | null;
-      subcategory: string | null;
-      seasonality: string | null;
-      on_hand_units: number | null;
-      on_order_units: number | null;
-      recent_units_7d: number | null;
-      recent_net_sales_7d: number | null;
-      avg_daily_velocity: number | null;
-      weeks_of_supply: number | null;
-      price_usd: number | null;
-      markdown_risk_score: number | null;
-      lost_sales_exposure_usd: number | null;
-      markdown_exposure_usd: number | null;
-      position_status: string | null;
-    }>(
-      warehouseId,
-      `SELECT store_id, store_name, region, climate_zone, city,
-              store_lat, store_lng, product_id, product_name, category,
-              subcategory, seasonality, on_hand_units, on_order_units,
-              recent_units_7d, recent_net_sales_7d, avg_daily_velocity,
-              weeks_of_supply, price_usd, markdown_risk_score,
-              lost_sales_exposure_usd, markdown_exposure_usd, position_status
-       FROM ${fq('storeSkuPosition')}`,
-    ),
-    execSql<{
-      store_id: string;
-      product_id: string;
-      on_hand_units: number | null;
-      avg_daily_velocity: number | null;
-      lost_sales_exposure_usd: number | null;
-      nearest_surplus_store_id: string | null;
-      nearest_surplus_on_hand: number | null;
-      nearest_surplus_distance_km: number | null;
-    }>(
-      warehouseId,
-      `SELECT store_id, product_id, on_hand_units, avg_daily_velocity,
-              lost_sales_exposure_usd, nearest_surplus_store_id,
-              nearest_surplus_on_hand, nearest_surplus_distance_km
-       FROM ${fq('openShortfalls')}`,
-    ),
-    hasRecoveryTable
-      ? execSql<{
-          store_id: string;
-          product_id: string;
-          recommended_move: string | null;
-          recommended_source_store_id: string | null;
-          recommended_substitute_product_id: string | null;
-          recommended_units: number | null;
-          predicted_recaptured_usd: number | null;
-          predicted_net_value_usd: number | null;
-          move_ranking: string | null;
-          scored_at: string | null;
-        }>(
-          warehouseId,
-          `SELECT store_id, product_id, recommended_move,
-                  recommended_source_store_id, recommended_substitute_product_id,
-                  recommended_units, predicted_recaptured_usd,
-                  predicted_net_value_usd,
-                  to_json(move_ranking) AS move_ranking, scored_at
-           FROM ${fq('recoveryRecommendations')}`,
-        ).catch((e) => {
-          // The trainee builds this table in the ML step — until then it
-          // won't exist. Degrade gracefully so the app still boots + the
-          // Visualize layer works; the agent's rank tool is the trainee's
-          // Build-2 task anyway.
-          console.warn(
-            `[sync] recovery_recommendations not available yet (this is the trainee's ML step) — leaving that mirror empty: ${(e as Error).message}`,
-          );
-          return [] as never[];
-        })
-      : Promise.resolve([] as never[]),
-  ]);
-  console.log(
-    `[sync]   queries done (${((Date.now() - t0) / 1000).toFixed(1)}s) — inserting…`,
-  );
-
-  if (positionRows.length) {
-    await chunkInsert(positionRows, 2_000, (chunk) =>
-      db
-        .insert(storeSkuPosition)
-        .values(
-          chunk.map((r) => ({
-            id: `${r.store_id}:${r.product_id}`,
-            storeId: r.store_id,
-            storeName: r.store_name,
-            region: r.region,
-            climateZone: r.climate_zone,
-            city: r.city,
-            storeLat: r.store_lat === null ? null : Number(r.store_lat),
-            storeLng: r.store_lng === null ? null : Number(r.store_lng),
-            productId: r.product_id,
-            productName: r.product_name,
-            category: r.category,
-            subcategory: r.subcategory,
-            seasonality: r.seasonality,
-            onHandUnits: r.on_hand_units === null ? null : Number(r.on_hand_units),
-            onOrderUnits: r.on_order_units === null ? null : Number(r.on_order_units),
-            recentUnits7d: r.recent_units_7d === null ? null : Number(r.recent_units_7d),
-            recentNetSales7d:
-              r.recent_net_sales_7d === null ? null : Number(r.recent_net_sales_7d),
-            avgDailyVelocity:
-              r.avg_daily_velocity === null ? null : Number(r.avg_daily_velocity),
-            weeksOfSupply: r.weeks_of_supply === null ? null : Number(r.weeks_of_supply),
-            priceUsd: r.price_usd === null ? null : Number(r.price_usd),
-            markdownRiskScore:
-              r.markdown_risk_score === null ? null : Number(r.markdown_risk_score),
-            lostSalesExposureUsd:
-              r.lost_sales_exposure_usd === null
-                ? null
-                : Number(r.lost_sales_exposure_usd),
-            markdownExposureUsd:
-              r.markdown_exposure_usd === null ? null : Number(r.markdown_exposure_usd),
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-            positionStatus: (r.position_status === 'stockout' ||
-            r.position_status === 'at_risk' ||
-            r.position_status === 'overstock'
-              ? r.position_status
-              : 'healthy') as 'stockout' | 'at_risk' | 'overstock' | 'healthy',
-          })),
-        )
-        .onConflictDoNothing(),
+  // Best-effort: the recovery Gold table is the ML step and may not exist yet.
+  const recoveryRows = await execSql<{
+    store_id: string;
+    product_id: string;
+    recommended_move: string | null;
+    recommended_source_store_id: string | null;
+    recommended_substitute_product_id: string | null;
+    recommended_units: number | null;
+    predicted_recaptured_usd: number | null;
+    predicted_net_value_usd: number | null;
+    move_ranking: string | null;
+    scored_at: string | null;
+  }>(
+    warehouseId,
+    `SELECT store_id, product_id, recommended_move,
+            recommended_source_store_id, recommended_substitute_product_id,
+            recommended_units, predicted_recaptured_usd,
+            predicted_net_value_usd,
+            to_json(move_ranking) AS move_ranking, scored_at
+     FROM ${fq}`,
+  ).catch((e) => {
+    console.warn(
+      `[sync] recovery_recommendations not available yet — leaving that mirror empty: ${(e as Error).message}`,
     );
-  }
-  console.log(
-    `[sync]   positions: ${positionRows.length} (${((Date.now() - t0) / 1000).toFixed(1)}s)`,
-  );
-
-  if (shortfallRows.length) {
-    await chunkInsert(shortfallRows, 5_000, (chunk) =>
-      db
-        .insert(openShortfalls)
-        .values(
-          chunk.map((r) => ({
-            id: `${r.store_id}:${r.product_id}`,
-            storeId: r.store_id,
-            productId: r.product_id,
-            onHandUnits: r.on_hand_units === null ? null : Number(r.on_hand_units),
-            avgDailyVelocity:
-              r.avg_daily_velocity === null ? null : Number(r.avg_daily_velocity),
-            lostSalesExposureUsd:
-              r.lost_sales_exposure_usd === null
-                ? null
-                : Number(r.lost_sales_exposure_usd),
-            nearestSurplusStoreId: r.nearest_surplus_store_id,
-            nearestSurplusOnHand:
-              r.nearest_surplus_on_hand === null
-                ? null
-                : Number(r.nearest_surplus_on_hand),
-            nearestSurplusDistanceKm:
-              r.nearest_surplus_distance_km === null
-                ? null
-                : Number(r.nearest_surplus_distance_km),
-          })),
-        )
-        .onConflictDoNothing(),
-    );
-  }
-  console.log(
-    `[sync]   shortfalls: ${shortfallRows.length} (${((Date.now() - t0) / 1000).toFixed(1)}s)`,
-  );
+    return [] as never[];
+  });
 
   if (recoveryRows.length) {
     await chunkInsert(recoveryRows, 5_000, (chunk) =>
@@ -287,11 +133,8 @@ export async function syncFromDelta(
     );
   }
   console.log(
-    `[sync]   recovery recommendations: ${recoveryRows.length} (${((Date.now() - t0) / 1000).toFixed(1)}s)`,
+    `[sync] recovery recommendations: ${recoveryRows.length} (${((Date.now() - t0) / 1000).toFixed(1)}s)`,
   );
-
-  const dt = ((Date.now() - t0) / 1000).toFixed(1);
-  console.log(`[sync] Done in ${dt}s`);
 }
 
 /** `move_ranking` comes back as a JSON string (we `to_json(...)` it in SQL
@@ -308,10 +151,11 @@ function parseMoveRanking(raw: string | null): MoveOption[] {
 }
 
 /**
- * Reset: truncate the app's writable table + chat state, then re-sync the
- * read-only mirrors. All agent writes are wiped — shortfalls return to
- * stockout/at_risk, exposure returns to full. Intentional: between
- * presentations Dana wants the backlog to look untouched.
+ * Reset: truncate the app's OWN tables (chat state, the writable action table,
+ * and the recovery_recommendations mirror), then re-sync recovery. The
+ * Build-1 Lakebase Synced Tables (store_sku_position, open_shortfalls,
+ * products, products_search) are READ-ONLY and owned by the sync — never
+ * touched here.
  */
 export async function wipeMirroredTables(db: AppDb): Promise<void> {
   await db.transaction(async (tx) => {
@@ -320,10 +164,10 @@ export async function wipeMirroredTables(db: AppDb): Promise<void> {
     await tx.execute(sql`TRUNCATE TABLE app.conversations RESTART IDENTITY CASCADE`);
     // The writable action table — the only place agent writes land.
     await tx.execute(sql`TRUNCATE TABLE app.ops_actions RESTART IDENTITY CASCADE`);
-    // Read-only mirrors — re-pulled by syncFromDelta after this.
-    await tx.execute(sql`TRUNCATE TABLE app.recovery_recommendations RESTART IDENTITY CASCADE`);
-    await tx.execute(sql`TRUNCATE TABLE app.open_shortfalls RESTART IDENTITY CASCADE`);
-    await tx.execute(sql`TRUNCATE TABLE app.store_sku_position RESTART IDENTITY CASCADE`);
+    // App-owned recovery mirror — re-pulled by syncFromDelta after this.
+    await tx.execute(
+      sql`TRUNCATE TABLE app.recovery_recommendations RESTART IDENTITY CASCADE`,
+    );
   });
 }
 

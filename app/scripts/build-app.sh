@@ -35,7 +35,22 @@ npm install --include=dev
 # container's runMigrations() 503s with "No Drizzle migrations folder found".
 # Generate it here so it lands next to dist/ and the DAB sync.include ships it.
 echo "[build-app] generating Drizzle migrations (db:generate)…"
+# Regenerate from a clean slate. Incremental generation off a stale snapshot
+# would emit DROP TABLE for tables we removed from schema.ts (the Build-1
+# Lakebase Synced Tables) — which we must NEVER drop. A fresh generate emits a
+# single CREATE-only migration for the app's own tables.
+rm -rf "$APP_DIR/drizzle"
 npm run db:generate
+
+# The `app` schema is a Build-1 Lakebase resource owned by the sync writer role
+# (it holds the read-only Synced Tables). Our app only CREATEs its own tables in
+# it, so make the generated `CREATE SCHEMA "app"` idempotent — otherwise the
+# migrator dies with 42P06 (schema already exists) and DB init never runs.
+if compgen -G "$APP_DIR/drizzle/*.sql" > /dev/null; then
+    sed -i.bak -E 's/CREATE SCHEMA "app"/CREATE SCHEMA IF NOT EXISTS "app"/g' "$APP_DIR"/drizzle/*.sql
+    rm -f "$APP_DIR"/drizzle/*.sql.bak
+    echo "[build-app] patched migrations → CREATE SCHEMA IF NOT EXISTS \"app\""
+fi
 
 echo "[build-app] building server + client…"
 npm run build:source
