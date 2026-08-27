@@ -160,6 +160,15 @@
   .placeholder .tag::before { content: "▢"; font-size: .9rem; }
   .placeholder p { color: var(--ink-soft); font-size: .96rem; }
 
+  /* product screenshots */
+  .shot { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: var(--surface-2); margin: 0; }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot figcaption {
+    font-family: "IBM Plex Mono", monospace; font-size: .7rem; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--brand);
+    padding: .7rem .9rem; border-top: 1px solid var(--line-soft); background: var(--surface);
+  }
+
   /* build-arc flow */
   .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: .6rem; }
   .flow .node { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.3rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .5rem; }
@@ -342,10 +351,10 @@
           <li><b style="color:var(--ink)">Act</b>: the manager approves the transfer; it writes back and shows on the next read.</li>
         </ul>
       </div>
-      <div class="placeholder" style="min-height:240px;justify-content:center;">
-        <span class="tag">Live demo goes here</span>
-        <p>Live walkthrough of Grand Theft Demo: Store 0214 out of the Summit Down Parka → the explanation → the costed recovery options → the approved transfer from Store 0377 appearing on refresh.</p>
-      </div>
+      <figure class="shot">
+        <img src="assets/stockout_dash.png" alt="NorthPeak Store Operations dashboard: US map with red stockouts in the North and amber overstock in the South, Store 0214 (Denver #0006) selected showing 0 on hand and stockout status, with lost-sales and markdown exposure KPIs.">
+        <figcaption>NorthPeak Store Ops · Store 0214 (Denver) stocked out on the Summit Down Parka</figcaption>
+      </figure>
     </div>
   </div>
 </section>
@@ -392,10 +401,10 @@
           <p class="attrib"><b>Amara Nwachukwu</b> · VP Finance, Technology</p>
         </div>
       </div>
-      <div class="placeholder" style="min-height:300px;justify-content:center;">
-        <span class="tag">Unity Gateway usage dashboard</span>
-        <p>Cost per recommendation, the budget ceiling, and trace coverage across the app, the coding agent, and the MCP.</p>
-      </div>
+      <figure class="shot">
+        <img src="assets/gateway_usage_analysis.png" alt="AI Gateway Usage Analytics dashboard, Cost Analysis tab: cost over time broken down by model, monthly cost, and top endpoints, models, and users by cost — spend that is bounded, visible, and attributable.">
+        <figcaption>Unity AI Gateway · cost broken down by model, endpoint, and user</figcaption>
+      </figure>
     </div>
   </div>
 </section>
