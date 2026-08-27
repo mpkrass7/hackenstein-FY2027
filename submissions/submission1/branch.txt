@@ -1,0 +1,27 @@
+DEVELOPMENT BRANCH (off main) — NorthPeak Retail Build 1
+========================================================
+
+Two coordinated development branches were used for iteration and promotion:
+
+1) Lakebase database branch
+   name:   dev
+   parent: projects/northpeak-retail/branches/production  (branched off production/main)
+   uid:    br-small-bird-d8k2thgt
+   endpoint: projects/northpeak-retail/branches/dev/endpoints/primary (READ_WRITE, 0.5-2 CU)
+   Used to iterate on the schema change in isolation from production data before promoting.
+
+2) Git feature branch
+   name:   build1/lakebase-agent-change   (off master)
+   commit: ae6a7c2 feat(lakebase): forecast expected_recovery_date on ops_actions
+
+CHANGES MADE ON THE BRANCH
+--------------------------
+Migration 0001_add_expected_recovery_date.sql on the writable ops.ops_actions table:
+  - ADD COLUMN expected_recovery_date date (additive, non-breaking)
+  - Backfill from move-type SLA: transfer +3d, expedite +1d, substitute +0d, markdown_hold +7d
+
+ITERATION + PROMOTION
+---------------------
+  - Applied + validated on Lakebase dev branch (UPDATE 3).
+  - Promoted to Lakebase production branch (UPDATE 3, validated).
+  - Promoted in git: merged build1/lakebase-agent-change into master (--no-ff merge commit).

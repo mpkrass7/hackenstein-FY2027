@@ -1,0 +1,18 @@
+CORE BUSINESS QUESTION — NorthPeak Retail (Build 1)
+===================================================
+
+Question:
+  Which northern stores are short on the Summit Down Parka (SKU-APP-04412),
+  and where is the nearest surplus store to recover the stock from?
+
+Why it matters:
+  A cold snap sold out the parka across northern stores while the same SKU
+  piles up in the south. The recovery move (transfer) needs the nearest
+  surplus. This is answered entirely from Lakebase synced tables at low latency.
+
+Query: lakebase/sql/core_query.sql (joins app.open_shortfalls x app.store_sku_position).
+Result: submission1/core_query_result.json
+
+Answer (top): STORE-0006 Denver is the highest-exposure northern stockout
+($80,036 lost-sales), nearest surplus STORE-0377 Colorado Springs (833 units, 100km).
+The hero STORE-0214 Denver also recovers from STORE-0377 (833 units, 100km).

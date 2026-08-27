@@ -1,0 +1,31 @@
+* d36b271 (HEAD -> master) feat(lakebase): Build-1 standup as code (synced tables, reverse CDF, search)
+*   b589bfc Merge build1/lakebase-agent-change: promote expected_recovery_date migration
+|\  
+| * ae6a7c2 (build1/lakebase-agent-change) feat(lakebase): forecast expected_recovery_date on ops_actions
+|/  
+| *   0c5077b (origin/master, origin/HEAD) Merge pull request #3 from mpkrass7/mk-genie-dashboard-custom-vega
+| |\  
+| | * e70f97b feat: add custom Vega-Lite dashboard with dark executive theme\n\nAdded 6 custom-vega-viz widgets:\n- Ranged dot plot (exposure by category)\n- Heatmap with text overlay (zone x status)\n- Radial arc chart (recovery action mix)\n- Layered bullet chart (revenue recovery gross vs net)\n- Rolling mean + raw points (daily demand trends)\n- Geographic proportional scatter (store exposure map)\n\nNew Demand Trends page with time series from silver_sales.\nDark theme: Space Grotesk, #0F1419 canvas, icy accent palette."
+| |/  
+| *   707b8e0 Merge pull request #2 from mpkrass7/mk-genie-agents-conventions
+| |\  
+| | * ac27f02 docs(agents): link Genie best practices for git workflow, project memory, and session summaries
+| |/  
+| * 6227c0e deck: add getaway-car favicon for the browser tab
+| * 29fdc5d docs: fix README banner to use published Grand Theft Demo cover
+| * fcc2242 docs: update AGENTS.md for Grand Theft Demo rebrand
+|/  
+* 404bb49 Dashboard updates
+* 0b8a0db feat(milestone-1.5): Add AI/BI dashboard and Genie space\n\n- NorthPeak Store Operations dashboard (ID: 01f1a241ead61daf9218520f5a644029)\n  - Operations page: KPI counters, symbol map, bar charts\n  - Recovery page: stockout/overstock tables, recovery recommendations\n- NorthPeak Store Operations Genie space (ID: 01f1a2400b8c16d0a85c77a6d8054843)\n  - 4 tables/metric views, 7 sample questions with curated SQL\n- Updated resources.json with both IDs
+* 07cc563 Rebrand deck to Grand Theft Demo + real cold-snap scenario
+* 928ff5a deck: remove presenter/pitch notes from slides
+* e95dcd7 Restore full AGENTS.md context and add Pages/deck section
+* 7cae1ec Add ShelfSignal pitch deck + GitHub Pages hosting
+* 149ab20 Metric View
+* 6b19267 SDP Pipelines for Silver -> Gold
+*   1cedab6 Merge pull request #1 from mpkrass7/mk-genie-catalog-switch
+|\  
+| * 8cc8993 chore: add team section (Marshall + Logan) and fix catalog to adminbox_catalog
+|/  
+* d35b93c chore: switch target catalog from stablebox_catalog to adminbox
+* d45594b Initial commit

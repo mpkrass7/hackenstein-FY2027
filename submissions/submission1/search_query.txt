@@ -1,0 +1,65 @@
+LAKEBASE SEARCH — natural-language query
+=======================================
+
+NL query: "insulated warm winter jacket, a warm alternative to a down parka"
+
+Method: hybrid retrieval over search.product_search (1998 products), combining
+  - vector (semantic) search: pgvector cosine ANN over a native vector(1024)
+    embedding column (embeddings produced IN-ACCOUNT by databricks-gte-large-en,
+    synced from Delta via a Lakebase synced table with a vector type override)
+  - keyword (full-text) search: Postgres BM25-style FTS over product name + description
+  fused with Reciprocal Rank Fusion (RRF). Retrieval never leaves the account.
+
+Top result: SKU-APP-04418 Ridgeline Insulated Jacket — the warm, insulated
+alternative to the sold-out Summit Down Parka (ranked #1 by BOTH vector and keyword).
+
+SQL (see lakebase/sql/search_query.sql; :qvec is the in-account query embedding):
+----------------------------------------------------------------------------------
+-- Lakebase hybrid search (vector + full-text) over product descriptions,
+-- combined with Reciprocal Rank Fusion (RRF). Retrieval never leaves the
+-- account: the query embedding is produced in-account by databricks-gte-large-en
+-- and injected as :qvec; the keyword side uses Postgres full-text.
+--
+-- Placeholders (substituted by scripts/search_run.sh):
+--   :qvec  -> the 1024-dim query embedding literal, e.g. '[0.01,...]'::vector(1024)
+--   :qtext -> the natural-language query string, e.g. 'insulated warm parka alternative'
+WITH q AS (
+    SELECT :qvec ::vector(1024)                       AS qvec,
+           plainto_tsquery('english', :qtext)         AS qtext
+),
+vector_ranked AS (
+    SELECT product_id, RANK() OVER (ORDER BY embedding <=> (SELECT qvec FROM q)) AS rank
+    FROM search.product_search
+    ORDER BY embedding <=> (SELECT qvec FROM q)
+    LIMIT 40
+),
+keyword_ranked AS (
+    SELECT product_id,
+           RANK() OVER (ORDER BY ts_rank_cd(description_tsv, (SELECT qtext FROM q)) DESC) AS rank
+    FROM search.product_search
+    WHERE description_tsv @@ (SELECT qtext FROM q)
+    ORDER BY ts_rank_cd(description_tsv, (SELECT qtext FROM q)) DESC
+    LIMIT 40
+)
+SELECT
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.seasonality,
+    ROUND((COALESCE(1.0/(60+v.rank),0) + COALESCE(1.0/(60+k.rank),0))::numeric, 5) AS rrf_score,
+    v.rank AS vector_rank,
+    k.rank AS keyword_rank,
+    LEFT(p.description, 96) AS description
+FROM search.product_search p
+LEFT JOIN vector_ranked  v ON p.product_id = v.product_id
+LEFT JOIN keyword_ranked k ON p.product_id = k.product_id
+WHERE v.product_id IS NOT NULL OR k.product_id IS NOT NULL
+ORDER BY rrf_score DESC, p.product_id
+LIMIT 10;
+
+NOTE — native Lakebase Search extensions:
+This build uses base pgvector (ivfflat) + Postgres FTS, which run today. The native
+Lakebase Search index types (lakebase_ann / lakebase_bm25) are provided in
+lakebase/sql/00_extensions.sql + 02b_search_index_lakebase.sql and require the Beta
+'Lakebase Search' feature to be enabled on the project (Previews page + project
+Settings; irreversible, restarts computes).

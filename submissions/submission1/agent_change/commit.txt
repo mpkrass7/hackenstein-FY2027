@@ -1,0 +1,45 @@
+commit ae6a7c266ea746ab02e52121b550a6cd45dcdd17
+Author: Logan Carlson <logan.carlson@databricks.com>
+Date:   Thu Aug 27 15:10:18 2026 -0500
+
+    feat(lakebase): forecast expected_recovery_date on ops_actions
+    
+    Additive migration on the writable ops.ops_actions table: add an
+    expected_recovery_date column and backfill it from each action's
+    move-type SLA (transfer +3d, expedite +1d, substitute +0d,
+    markdown_hold +7d). Non-breaking; validated on the Lakebase dev branch
+    before promotion to production.
+    
+    Co-authored-by: Cursor Agent (Claude Opus) <cursor-agent@cursor.com>
+
+diff --git a/lakebase/migrations/0001_add_expected_recovery_date.sql b/lakebase/migrations/0001_add_expected_recovery_date.sql
+new file mode 100644
+index 0000000..1bcfc5c
+--- /dev/null
++++ b/lakebase/migrations/0001_add_expected_recovery_date.sql
+@@ -0,0 +1,25 @@
++-- Migration 0001: forecast the expected recovery date per action.
++--
++-- Adds an additive, non-breaking `expected_recovery_date` column to
++-- ops.ops_actions and backfills it from each action's move-type SLA, so the
++-- Operations queue can forecast when each stocked-out position recovers:
++--   transfer  -> +3 days   (inter-store move)
++--   expedite  -> +1 day    (rush from DC)
++--   substitute-> +0 days   (offer in-stock alternative immediately)
++--   markdown_hold -> +7 days (hold window before re-evaluation)
++--
++-- Additive column with a backfill: existing app reads (SELECT *) keep working.
++
++ALTER TABLE ops.ops_actions
++    ADD COLUMN IF NOT EXISTS expected_recovery_date date;
++
++UPDATE ops.ops_actions
++SET expected_recovery_date = created_at::date + (
++    CASE move_type
++        WHEN 'transfer'      THEN 3
++        WHEN 'expedite'      THEN 1
++        WHEN 'substitute'    THEN 0
++        WHEN 'markdown_hold' THEN 7
++    END
++) * INTERVAL '1 day'
++WHERE expected_recovery_date IS NULL;
