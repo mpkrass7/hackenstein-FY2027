@@ -43,14 +43,14 @@ Retail stockout & markdown rescue app. A cold snap caused 5 cold-weather apparel
 
 - [x] **1.1** — Data generation (job run completed successfully)
 - [x] **1.2** — Data exploration notebook (all validations passed)
-- [ ] **1.3** — SDP pipeline (silver + gold + heuristic recommendations)
-- [ ] **1.4** — Metric view `mv_store_position`
-- [ ] **1.5** — AI/BI dashboard + Genie space
-- [ ] **1.6** — (Optional) ML recovery model
-- [ ] **2.1** — Lakebase instance + dev branch
-- [ ] **2.2** — Sync gold tables (read-only)
-- [ ] **2.3** — Writable `ops_actions` table
-- [ ] **2.4** — Lakebase Search on products
+- [x] **1.3** — SDP pipeline (silver + gold + heuristic recommendations)
+- [x] **1.4** — Metric view `mv_store_position`
+- [x] **1.5** — AI/BI dashboard + Genie space
+- [x] **1.6** — (Optional) ML recovery model
+- [x] **2.1** — Lakebase instance + dev branch
+- [x] **2.2** — Sync gold tables (read-only)
+- [x] **2.3** — Writable `ops_actions` table
+- [x] **2.4** — Lakebase Search on products
 - [ ] **3.x** — Databricks App
 - [ ] **4.x** — Unity AI Gateway
 
