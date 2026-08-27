@@ -1,73 +1,32 @@
 <!DOCTYPE html>
-<title>ShelfSignal</title>
+<title>Grand Theft Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 
 <style>
-  /* ---------- TOKENS: light is the base :root ---------- */
+  /* ---------- GRAND THEFT DEMO · single dark heist theme ---------- */
   :root {
-    --bg:        #EAEEF5;
-    --surface:   #FFFFFF;
-    --surface-2: #F5F8FC;
-    --ink:       #0F1626;
-    --ink-soft:  #38445A;
-    --muted:     #6A7689;
-    --line:      #D6DEEA;
-    --line-soft: #E6ECF4;
+    --bg:        #0E2A27;   /* dark teal-black */
+    --surface:   #14322F;
+    --surface-2: #0A211E;
+    --ink:       #F4EFE3;   /* cream */
+    --ink-soft:  #C6D1CC;
+    --muted:     #8AA09B;
+    --line:      #274743;
+    --line-soft: #1B3835;
 
-    --brand:      #2F62FF;   /* north signal */
-    --brand-deep: #16307A;
-    --brand-ghost: rgba(47,98,255,0.09);
+    --brand:      #F0562E;  /* GTA orange */
+    --brand-deep: #C33C18;
+    --brand-ghost: rgba(240,86,46,0.13);
 
-    --pos:  #0E9F6E;   /* recovery / in-stock */
-    --warn: #D97A0A;   /* markdown / at-risk */
-    --crit: #DB3A3F;   /* stockout / loss */
+    --gold: #F5B301;        /* stars */
+    --crit: #FF5A4D;        /* stockout / loss */
+    --warn: #F5B301;        /* markdown */
+    --pos:  #3FC291;        /* recovery / win */
 
-    --shadow: 0 1px 2px rgba(15,22,38,.05), 0 12px 32px -12px rgba(15,22,38,.16);
-    --radius: 14px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg:        #080B12;
-      --surface:   #111827;
-      --surface-2: #0D1320;
-      --ink:       #EAF0FB;
-      --ink-soft:  #B4C0D6;
-      --muted:     #7C89A1;
-      --line:      #222C3E;
-      --line-soft: #1A2334;
-
-      --brand:      #6E96FF;
-      --brand-deep: #B7CCFF;
-      --brand-ghost: rgba(110,150,255,0.13);
-
-      --pos:  #35D6A0;
-      --warn: #F6B24A;
-      --crit: #FF6469;
-
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 40px -14px rgba(0,0,0,.6);
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg:        #080B12;
-    --surface:   #111827;
-    --surface-2: #0D1320;
-    --ink:       #EAF0FB;
-    --ink-soft:  #B4C0D6;
-    --muted:     #7C89A1;
-    --line:      #222C3E;
-    --line-soft: #1A2334;
-
-    --brand:      #6E96FF;
-    --brand-deep: #B7CCFF;
-    --brand-ghost: rgba(110,150,255,0.13);
-
-    --pos:  #35D6A0;
-    --warn: #F6B24A;
-    --crit: #FF6469;
-
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 40px -14px rgba(0,0,0,.6);
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 20px 46px -16px rgba(0,0,0,.7);
+    --radius: 12px;
   }
 
   * { box-sizing: border-box; }
@@ -93,21 +52,20 @@
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    scrollbar-width: none;      /* Firefox */
+    scrollbar-width: none;
   }
-  .deck::-webkit-scrollbar { display: none; }   /* WebKit */
+  .deck::-webkit-scrollbar { display: none; }
   @media (prefers-reduced-motion: reduce) { .deck { scroll-behavior: auto; } }
 
-  /* ---------- SLIDE FRAME ---------- */
   .slide {
     scroll-snap-align: start;
     flex: 0 0 100vw;
     width: 100vw;
     height: 100vh;
-    overflow-y: auto;                 /* tall slides scroll vertically within */
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    justify-content: safe center;     /* 'safe' keeps the top reachable when content overflows */
+    justify-content: safe center;
     padding: clamp(2.4rem, 6vw, 6rem) clamp(1.4rem, 7vw, 8rem);
     position: relative;
     border-right: 1px solid var(--line-soft);
@@ -115,22 +73,22 @@
   .wrap { width: 100%; max-width: 1080px; margin: 0 auto; }
 
   /* ---------- TYPE ---------- */
-  h1, h2, h3 { font-family: "Bricolage Grotesque", "Inter", sans-serif; font-weight: 800; line-height: 1.03; margin: 0; text-wrap: balance; letter-spacing: -0.02em; }
-  h1 { font-size: clamp(2.6rem, 6.5vw, 5.2rem); }
-  h2 { font-size: clamp(2rem, 4.6vw, 3.4rem); }
-  h3 { font-size: clamp(1.15rem, 2.2vw, 1.5rem); letter-spacing: -0.01em; }
+  h1, h2 { font-family: "Anton", "Inter", sans-serif; font-weight: 400; line-height: .98; margin: 0; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+  h2 { font-size: clamp(2.4rem, 5.4vw, 4.2rem); }
+  h3 { font-family: "Inter", sans-serif; font-weight: 700; font-size: clamp(1.1rem, 2.1vw, 1.45rem); line-height: 1.12; margin: 0; letter-spacing: -0.01em; }
   p  { margin: 0; }
   .lead { font-size: clamp(1.05rem, 1.9vw, 1.4rem); color: var(--ink-soft); max-width: 60ch; }
 
   .eyebrow {
     font-family: "IBM Plex Mono", monospace;
-    font-size: .78rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+    font-size: .78rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
     color: var(--brand); margin: 0 0 1.1rem;
     display: flex; align-items: center; gap: .7rem;
   }
   .eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--brand); display: inline-block; }
   .eyebrow.pos { color: var(--pos); } .eyebrow.pos::before { background: var(--pos); }
   .eyebrow.crit { color: var(--crit); } .eyebrow.crit::before { background: var(--crit); }
+  .eyebrow.gold { color: var(--gold); } .eyebrow.gold::before { background: var(--gold); }
 
   .mono { font-family: "IBM Plex Mono", monospace; }
   .num  { font-variant-numeric: tabular-nums; }
@@ -151,9 +109,9 @@
   .card h3 { margin-bottom: .5rem; }
   .card p { color: var(--ink-soft); font-size: .98rem; }
 
-  .stat { display: flex; flex-direction: column; gap: .35rem; }
-  .stat .big { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: clamp(2.2rem, 4.6vw, 3.5rem); line-height: 1; letter-spacing: -0.03em; }
-  .stat .lbl { font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .stat { display: flex; flex-direction: column; gap: .4rem; }
+  .stat .big { font-family: "Anton", sans-serif; font-weight: 400; font-size: clamp(2.4rem, 5vw, 3.8rem); line-height: .9; letter-spacing: .01em; transform: skewX(-5deg); transform-origin: left; }
+  .stat .lbl { font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
   .stat.loss .big { color: var(--crit); }
   .stat.bleed .big { color: var(--warn); }
   .stat.win .big { color: var(--pos); }
@@ -162,10 +120,11 @@
   .rail { border-left: 3px solid var(--brand); padding-left: 1.1rem; }
   .rail.crit { border-color: var(--crit); }
   .rail.pos { border-color: var(--pos); }
+  .rail h3 { margin-bottom: .35rem; }
 
   .quote {
-    font-family: "Bricolage Grotesque", sans-serif; font-weight: 500;
-    font-size: clamp(1.3rem, 2.6vw, 1.9rem); line-height: 1.2; letter-spacing: -0.01em;
+    font-family: "Inter", sans-serif; font-weight: 600; font-style: italic;
+    font-size: clamp(1.25rem, 2.5vw, 1.85rem); line-height: 1.22; letter-spacing: -0.01em;
     color: var(--ink); text-wrap: balance;
   }
   .attrib { font-family: "IBM Plex Mono", monospace; font-size: .82rem; color: var(--muted); margin-top: .9rem; letter-spacing: .02em; }
@@ -179,18 +138,18 @@
     color: var(--muted); background: var(--surface-2);
   }
   .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-  .chip.pos { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 40%, var(--line)); } .chip.pos .dot { background: var(--pos); }
-  .chip.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); } .chip.warn .dot { background: var(--warn); }
-  .chip.crit { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 40%, var(--line)); } .chip.crit .dot { background: var(--crit); }
-  .chip.brand { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); } .chip.brand .dot { background: var(--brand); }
+  .chip.pos { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 45%, var(--line)); } .chip.pos .dot { background: var(--pos); }
+  .chip.crit { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 45%, var(--line)); } .chip.crit .dot { background: var(--crit); }
+  .chip.brand { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 45%, var(--line)); } .chip.brand .dot { background: var(--brand); }
 
-  /* fill-in placeholder for the team's live demo / real numbers */
+  .stars { color: var(--gold); letter-spacing: .12em; font-size: 1.1rem; }
+
   .placeholder {
-    border: 1.5px dashed color-mix(in srgb, var(--brand) 55%, var(--line));
+    border: 1.5px dashed color-mix(in srgb, var(--brand) 60%, var(--line));
     border-radius: var(--radius);
     background: var(--brand-ghost);
     padding: 1.4rem 1.5rem;
-    display: flex; flex-direction: column; gap: .4rem;
+    display: flex; flex-direction: column; gap: .5rem;
   }
   .placeholder .tag {
     font-family: "IBM Plex Mono", monospace; font-size: .7rem; font-weight: 600;
@@ -198,58 +157,53 @@
     display: flex; align-items: center; gap: .5rem;
   }
   .placeholder .tag::before { content: "▢"; font-size: .9rem; }
-  .placeholder p { color: var(--ink-soft); font-size: .95rem; }
+  .placeholder p { color: var(--ink-soft); font-size: .96rem; }
 
   /* build-arc flow */
   .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: .6rem; }
-  .flow .node { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.3rem 1.3rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .5rem; }
+  .flow .node { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.3rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .5rem; }
   .flow .node .k { font-family: "IBM Plex Mono", monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--brand); }
-  .flow .node h3 { font-size: 1.15rem; }
   .flow .node p { font-size: .9rem; color: var(--ink-soft); }
-  .flow .arrow { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 1.4rem; }
+  .flow .arrow { display: flex; align-items: center; justify-content: center; color: var(--brand); font-size: 1.5rem; }
 
   ul.ticks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .7rem; }
   ul.ticks li { display: flex; gap: .7rem; align-items: flex-start; color: var(--ink-soft); font-size: 1rem; }
   ul.ticks li::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: .5rem; border-radius: 2px; background: var(--brand); }
   ul.ticks.pos li::before { background: var(--pos); }
 
-  .kv { display: grid; grid-template-columns: auto 1fr; gap: .5rem 1rem; align-items: baseline; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: .55rem 1rem; align-items: baseline; }
   .kv .mono { color: var(--brand); font-size: .82rem; white-space: nowrap; }
   .kv span:nth-child(even) { color: var(--ink-soft); font-size: .95rem; }
 
   .split { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(1.5rem, 4vw, 3.4rem); align-items: center; }
-  .stack-lg { display: flex; flex-direction: column; gap: 1.6rem; }
   .stack-md { display: flex; flex-direction: column; gap: 1.1rem; }
   .stack-sm { display: flex; flex-direction: column; gap: .7rem; }
   .tophead { margin-bottom: 2.2rem; }
 
-  /* ---------- COVER ---------- */
-  #cover { background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%); overflow: hidden; }
-  #cover .peaks { position: absolute; inset: auto 0 0 0; width: 100%; height: 42%; opacity: .5; pointer-events: none; }
-  #cover .glow { position: absolute; top: -12%; right: -6%; width: 46vw; height: 46vw; border-radius: 50%;
-    background: radial-gradient(circle, var(--brand-ghost) 0%, transparent 66%); pointer-events: none; }
-  .cover-team { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 2.2rem; }
+  /* ---------- COVER (title-card image) ---------- */
+  #cover { padding: 0; background: var(--bg); align-items: center; }
+  #cover img { max-width: 100%; max-height: 100vh; width: auto; height: auto; object-fit: contain; display: block; }
+
+  .footnote { font-family: "IBM Plex Mono", monospace; font-size: .74rem; color: var(--muted); margin-top: 1.6rem; }
 
   /* ---------- CHROME ---------- */
   .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--brand); width: 0%; z-index: 50; transition: width .3s ease; }
   @media (prefers-reduced-motion: reduce){ .progress { transition: none; } }
-  .chrome-tr { position: fixed; top: 1rem; right: 1.1rem; z-index: 50; display: flex; align-items: center; gap: .6rem; }
-  .counter { font-family: "IBM Plex Mono", monospace; font-size: .78rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--line); padding: .3rem .55rem; border-radius: 8px; backdrop-filter: blur(6px); }
+  .counter { position: fixed; top: 1rem; right: 1.1rem; z-index: 50; font-family: "IBM Plex Mono", monospace; font-size: .78rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 84%, transparent); border: 1px solid var(--line); padding: .32rem .55rem; border-radius: 8px; backdrop-filter: blur(6px); }
   .counter b { color: var(--ink); }
   .nav { position: fixed; bottom: 1.1rem; right: 1.1rem; z-index: 50; display: flex; gap: .5rem; }
   .deckmark { position: fixed; bottom: 1.15rem; left: 1.2rem; z-index: 50; font-family: "IBM Plex Mono", monospace; font-size: .74rem; color: var(--muted); letter-spacing: .04em; display: flex; align-items: center; gap: .5rem; }
   .deckmark .pk { color: var(--brand); font-weight: 600; }
+  .deckmark .st { color: var(--gold); }
   button.ui {
     font-family: "IBM Plex Mono", monospace; font-size: .8rem; color: var(--ink);
-    background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 84%, transparent); border: 1px solid var(--line);
     border-radius: 9px; padding: .45rem .7rem; cursor: pointer; backdrop-filter: blur(6px);
     display: inline-flex; align-items: center; gap: .4rem; line-height: 1;
   }
   button.ui:hover { border-color: var(--brand); color: var(--brand); }
   button.ui:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   button.ui[disabled] { opacity: .35; cursor: default; }
-
-  .footnote { font-family: "IBM Plex Mono", monospace; font-size: .74rem; color: var(--muted); margin-top: 1.6rem; }
 
   @media (max-width: 780px) {
     body { font-size: 16px; }
@@ -262,74 +216,48 @@
 </style>
 
 <div class="progress" id="progress"></div>
-<div class="chrome-tr">
-  <span class="counter"><b id="cur">01</b> / <span id="tot">11</span></span>
-  <button class="ui" id="theme" aria-label="Toggle light or dark theme">◐ Theme</button>
-</div>
-<div class="deckmark"><span class="pk">◈ ShelfSignal</span> · NorthPeak Retail</div>
+<span class="counter"><b id="cur">01</b> / <span id="tot">11</span></span>
+<div class="deckmark"><span class="pk">▲ GRAND THEFT DEMO</span> <span class="st">★★★★★</span> NorthPeak Retail</div>
 <div class="nav">
   <button class="ui" id="prev" aria-label="Previous slide">←</button>
   <button class="ui" id="next" aria-label="Next slide">→</button>
 </div>
 
 <div class="deck" id="deck">
+
 <!-- ============ 01 · COVER ============ -->
 <section class="slide" id="cover">
-  <div class="glow" aria-hidden="true"></div>
-  <svg class="peaks" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
-    <polyline points="0,300 180,150 320,210 480,70 640,180 820,40 980,160 1120,90 1200,140 1200,300"
-      fill="none" stroke="var(--brand)" stroke-width="2" opacity="0.55"/>
-    <polyline points="0,300 160,220 340,250 520,150 700,230 900,130 1080,220 1200,180 1200,300"
-      fill="none" stroke="var(--brand)" stroke-width="1.4" opacity="0.28"/>
-  </svg>
-  <div class="wrap">
-    <p class="eyebrow">Databricks · AI Customer Challenge · Team LAKE</p>
-    <h1>Put the right product<br>in front of every customer.</h1>
-    <p class="lead" style="margin-top:1.5rem;">
-      Wrong-store inventory quietly costs <b>NorthPeak</b> <b style="color:var(--crit)">~$200M a year</b>:
-      sales lost to empty shelves, margin given away in markdowns. <b>ShelfSignal</b> is a live, governed
-      store-ops app that spots the shortfall, prescribes the recovery move, and lets a manager act on it
-      before the sale walks out the door, with the AI inside it bounded, visible, and attributable.
-    </p>
-    <div class="cover-team">
-      <span class="chip brand"><span class="dot"></span> One connected solution</span>
-      <span class="chip"><span class="dot"></span> Lakebase</span>
-      <span class="chip"><span class="dot"></span> Databricks Apps</span>
-      <span class="chip"><span class="dot"></span> Unity Gateway</span>
-    </div>
-    <p class="footnote">For the business and technical executives at NorthPeak Retail</p>
-  </div>
+  <img src="assets/grand_theft_demo.png" alt="Grand Theft Demo · Databricks Demo Days 2026. Starring Marshall Krassenstein (The Demo Guy), Logan Carlson (The Wheelman), and one extremely good boy (The Co-Host).">
 </section>
 
 <!-- ============ 02 · THE PROBLEM ============ -->
 <section class="slide">
   <div class="wrap">
     <div class="tophead">
-      <p class="eyebrow crit">The problem · in their words</p>
-      <h2>Two leaks. One root cause.</h2>
-      <p class="lead" style="margin-top:1rem;">Every day, real customers walk in ready to buy and walk out empty-handed. To NorthPeak that isn't a data problem. It's <b style="color:var(--crit)">~$200M a year</b> walking out the door.</p>
+      <p class="eyebrow crit">The heist we're stopping · in their words</p>
+      <h2>A cold snap robbed<br>NorthPeak twice.</h2>
+      <p class="lead" style="margin-top:1rem;">Temperatures dropped, and 5 cold-weather styles sold out across ~30 northern stores while the exact same styles piled up unsold in ~40 southern stores. Same event, two ways to lose money, and nobody saw it in time.</p>
     </div>
     <div class="split">
       <div class="stack-md">
         <div class="rail crit">
-          <h3>Stockouts</h3>
-          <p style="color:var(--ink-soft);margin-top:.4rem;">A shopper comes in for a product, the shelf is empty. The demand was real, but the sale is lost, and they often buy the rest of the basket somewhere else.</p>
+          <h3>Stockouts, up north</h3>
+          <p style="color:var(--ink-soft);margin-top:.4rem;">Shoppers came in for a parka, the shelf was empty. The demand was real, the sale walked out the door, and the rest of the basket often went with it.</p>
         </div>
         <div class="rail" style="border-color:var(--warn)">
-          <h3>Markdowns</h3>
-          <p style="color:var(--ink-soft);margin-top:.4rem;">The reverse: product sitting in the wrong stores that won't sell at full price, discounted to clear the shelf. The margin is given away.</p>
+          <h3>Markdowns, down south</h3>
+          <p style="color:var(--ink-soft);margin-top:.4rem;">The same styles sat in warm-weather stores that would never sell them at full price. Discounted to clear the racks, the margin was handed away.</p>
         </div>
-        <p class="lead" style="font-size:1.05rem;">Both come from the same thing: <b>inventory in the wrong store at the wrong time</b>, and nobody sees it until it's too late to move.</p>
       </div>
       <div class="cards grid-2">
-        <div class="card stat loss"><span class="big num">~$80M</span><span class="lbl">Lost revenue / yr · stockouts (~4% of sales)</span></div>
-        <div class="card stat bleed"><span class="big num">~$120M</span><span class="lbl">Margin given away / yr · markdowns</span></div>
-        <div class="card stat loss" style="grid-column:1 / -1;"><span class="big num">~$200M<span style="font-size:1.4rem;color:var(--muted)"> / yr</span></span><span class="lbl">Combined, the number Priya owns</span></div>
+        <div class="card stat loss"><span class="big num">~$4.8M</span><span class="lbl">Lost sales · this cold snap (north)</span></div>
+        <div class="card stat bleed"><span class="big num">~$5.6M</span><span class="lbl">Markdown exposure · this cold snap (south)</span></div>
+        <div class="card stat loss" style="grid-column:1 / -1;"><span class="big num">~$200M<span style="font-size:1.4rem;color:var(--muted)"> / yr</span></span><span class="lbl">Stockouts + markdowns across the chain · the number Priya owns</span></div>
       </div>
     </div>
-    <div style="margin-top:2.2rem;" class="rail crit">
+    <div style="margin-top:2rem;" class="rail crit">
       <p class="quote">"Which stores act differently tomorrow because of this?"</p>
-      <p class="attrib"><b>Priya Raghavan</b>, SVP Retail Operations</p>
+      <p class="attrib"><b>Priya Raghavan</b> · SVP Retail Operations</p>
     </div>
   </div>
 </section>
@@ -339,7 +267,7 @@
   <div class="wrap">
     <div class="tophead">
       <p class="eyebrow">Why it keeps happening</p>
-      <h2>The data is solid. It's just a day late.</h2>
+      <h2>The data is solid.<br>It's just a day late.</h2>
     </div>
     <div class="split">
       <ul class="ticks">
@@ -349,18 +277,18 @@
         <li><b style="color:var(--ink)">But everything is reported after the fact.</b> Dashboards refresh on a schedule, so store ops act on yesterday's picture instead of what's on the shelf right now.</li>
       </ul>
       <div class="card">
-        <p class="eyebrow" style="margin-bottom:.9rem;">Batch → real-time</p>
+        <p class="eyebrow" style="margin-bottom:.9rem;">Batch to real-time</p>
         <div class="stack-sm">
           <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:.7rem;border-bottom:1px solid var(--line-soft)">
             <span class="mono" style="color:var(--muted)">TODAY</span>
-            <span style="color:var(--ink-soft)">Nightly batch · "yesterday's shelf"</span>
+            <span style="color:var(--ink-soft)">Nightly batch, yesterday's shelf</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:.4rem;">
-            <span class="mono" style="color:var(--pos)">SHELFSIGNAL</span>
-            <span style="color:var(--ink)">Live view · action <b>today</b></span>
+            <span class="mono" style="color:var(--brand)">GRAND THEFT DEMO</span>
+            <span style="color:var(--ink)">Live view, action <b>today</b></span>
           </div>
         </div>
-        <p style="margin-top:1.1rem;color:var(--ink-soft);font-size:.95rem;">The ask isn't a new dashboard. It's the same governed data, turned into a decision on the floor.</p>
+        <p style="margin-top:1.1rem;color:var(--ink-soft);font-size:.95rem;">The ask isn't another dashboard. It's the same governed data, turned into a decision on the floor.</p>
       </div>
     </div>
   </div>
@@ -370,15 +298,15 @@
 <section class="slide">
   <div class="wrap">
     <div class="tophead">
-      <p class="eyebrow">The solution · one connected product</p>
-      <h2>Governed data → a decision → governed AI.</h2>
-      <p class="lead" style="margin-top:1rem;">Not three projects. One arc: the operational data layer feeds the app, the app surfaces and prescribes the move, and every AI call inside it runs under a cost-and-safety control plane.</p>
+      <p class="eyebrow">The getaway plan · one connected product</p>
+      <h2>Governed data. A decision. Governed AI.</h2>
+      <p class="lead" style="margin-top:1rem;">Not three jobs. One crew: the operational data layer feeds the app, the app surfaces and prescribes the move, and every AI call inside it runs under a cost-and-safety control plane.</p>
     </div>
     <div class="flow">
       <div class="node">
         <span class="k">01 · Lakebase</span>
         <h3>The live data layer</h3>
-        <p>Governed UC data synced to Postgres for low-latency reads, writable tables for actions, native hybrid search, with no second database and no data leaving the account.</p>
+        <p>Governed UC data synced to Postgres for low-latency reads, writable tables for actions, native hybrid search. No second database, no data leaving the account.</p>
       </div>
       <div class="arrow" aria-hidden="true">→</div>
       <div class="node">
@@ -389,8 +317,8 @@
       <div class="arrow" aria-hidden="true">→</div>
       <div class="node">
         <span class="k">03 · Unity Gateway</span>
-        <h3>The guardrails</h3>
-        <p>Every AI call bounded by budget, blocked from runaway reads, and traced in inference tables, so spend stays capped, visible, and attributable per store.</p>
+        <h3>The getaway rules</h3>
+        <p>Every AI call bounded by budget, blocked from runaway reads, and traced in inference tables. Spend that's capped, visible, and attributable per store.</p>
       </div>
     </div>
   </div>
@@ -400,22 +328,22 @@
 <section class="slide">
   <div class="wrap">
     <div class="tophead">
-      <p class="eyebrow pos">Live demo · the hero moment</p>
-      <h2>"Store 214 is short on a top product.<br>What's the best recovery move?"</h2>
+      <p class="eyebrow gold">Live demo · the hero moment</p>
+      <h2>Store 0214 just sold its last<br>Summit Down Parka.</h2>
+      <p class="lead" style="margin-top:1rem;">Denver, mid cold snap, and the top-selling parka (<span class="mono">SKU-APP-04412</span>) is gone. Meanwhile Store 0377 in Colorado Springs, ~100 miles away, is sitting on a pile of them. <b style="color:var(--ink)">What's the best recovery move?</b></p>
     </div>
     <div class="split">
       <div class="stack-md">
-        <p class="lead" style="font-size:1.05rem;">Walk the room through one decision, end to end:</p>
         <ul class="ticks pos">
-          <li><b style="color:var(--ink)">Surface</b>: the live view flags Store 214, ranked by lost-sales risk.</li>
-          <li><b style="color:var(--ink)">Explain</b>: the assistant says <i>why</i>, pulling the records from Lakebase Search.</li>
-          <li><b style="color:var(--ink)">Prescribe</b>: transfer vs. expedite vs. substitute, with the trade-offs costed.</li>
-          <li><b style="color:var(--ink)">Act</b>: the manager approves; the decision writes back and shows on the next read.</li>
+          <li><b style="color:var(--ink)">Surface</b>: the live view flags Store 0214, ranked by lost-sales risk.</li>
+          <li><b style="color:var(--ink)">Explain</b>: the assistant says why, pulling the records from Lakebase Search.</li>
+          <li><b style="color:var(--ink)">Prescribe</b>: transfer from Store 0377 vs. expedite from the DC vs. substitute, each with the trade-offs costed.</li>
+          <li><b style="color:var(--ink)">Act</b>: the manager approves the transfer; it writes back and shows on the next read.</li>
         </ul>
       </div>
-      <div class="placeholder" style="min-height:260px;justify-content:center;">
+      <div class="placeholder" style="min-height:240px;justify-content:center;">
         <span class="tag">Live demo goes here</span>
-        <p>Live walkthrough of ShelfSignal against Store 214: the flagged shortfall → the explanation → the costed recovery options → the approved write-back appearing on refresh.</p>
+        <p>Live walkthrough of Grand Theft Demo: Store 0214 out of the Summit Down Parka → the explanation → the costed recovery options → the approved transfer from Store 0377 appearing on refresh.</p>
       </div>
     </div>
   </div>
@@ -425,17 +353,17 @@
 <section class="slide">
   <div class="wrap">
     <div class="tophead">
-      <p class="eyebrow pos">Business value · the outcomes we defend</p>
+      <p class="eyebrow pos">The score · outcomes we defend</p>
       <h2>What changes on the floor.</h2>
     </div>
     <div class="cards grid-4">
       <div class="card stat win"><span class="big num">~$10M</span><span class="lbl">Revenue recaptured / yr · fewer stockouts</span></div>
       <div class="card stat win"><span class="big num">~$12M</span><span class="lbl">Margin protected / yr · earlier markdowns</span></div>
-      <div class="card stat brand"><span class="big">Real-time</span><span class="lbl">Batch latency → store action</span></div>
-      <div class="card stat brand"><span class="big">Capped</span><span class="lbl">AI spend · auditable</span></div>
+      <div class="card stat brand"><span class="big">LIVE</span><span class="lbl">Batch latency to store action</span></div>
+      <div class="card stat brand"><span class="big">CAPPED</span><span class="lbl">AI spend · auditable</span></div>
     </div>
     <div class="rail pos" style="margin-top:2rem;">
-      <p class="quote" style="font-size:1.4rem;">Revenue, margin, speed, and risk: the four levers Priya is measured on, moving in the same quarter.</p>
+      <p class="quote">One cold snap put ~$10.4M on the table in a single event. Grand Theft Demo turns that guesswork into a move a manager can make the same day.</p>
     </div>
   </div>
 </section>
@@ -445,7 +373,7 @@
   <div class="wrap">
     <div class="tophead">
       <p class="eyebrow">What the AI costs · bounded, visible, attributable</p>
-      <h2>The $1,200 weekend can't happen again.</h2>
+      <h2>The $1,200 weekend<br>can't happen again.</h2>
     </div>
     <div class="split">
       <div class="stack-md">
@@ -456,11 +384,11 @@
           <span class="chip brand"><span class="dot"></span> Budgets block calls over threshold</span>
           <span class="chip brand"><span class="dot"></span> Guardrails stop runaway all-data reads</span>
           <span class="chip brand"><span class="dot"></span> Inference tables trace every call</span>
-          <span class="chip brand"><span class="dot"></span> Attributable per store &amp; per initiative</span>
+          <span class="chip brand"><span class="dot"></span> Attributable per store and per initiative</span>
         </div>
         <div class="rail">
           <p class="quote" style="font-size:1.3rem;">"What does a recommendation cost, and what share of company AI spend is this?"</p>
-          <p class="attrib"><b>Amara Nwachukwu</b>, VP Finance, Technology</p>
+          <p class="attrib"><b>Amara Nwachukwu</b> · VP Finance, Technology</p>
         </div>
       </div>
       <div class="placeholder" style="min-height:300px;justify-content:center;">
@@ -476,12 +404,12 @@
   <div class="wrap">
     <div class="tophead">
       <p class="eyebrow">Why Databricks</p>
-      <h2>One governed platform. One control plane for AI cost.</h2>
+      <h2>One governed platform.<br>One control plane for AI cost.</h2>
     </div>
     <div class="cards grid-2">
       <div class="card">
-        <h3>Analytical &amp; operational on one platform</h3>
-        <p>The same governed Unity Catalog data serves the store floor at low latency, with no second operational database to stand up, sync, and reconcile.</p>
+        <h3>Analytical and operational on one platform</h3>
+        <p>The same governed Unity Catalog data serves the store floor at low latency. No second operational database to stand up, sync, and reconcile.</p>
       </div>
       <div class="card">
         <h3>Safe iteration, not risky changes</h3>
@@ -489,7 +417,7 @@
       </div>
       <div class="card">
         <h3>Retrieval that never leaves the account</h3>
-        <p>Native hybrid search over the operational data, so the assistant grounds its answers without shipping records to an outside service.</p>
+        <p>Native hybrid search over the operational data. The assistant grounds its answers without shipping records to an outside service.</p>
       </div>
       <div class="card">
         <h3>Governed AI by default</h3>
@@ -510,22 +438,22 @@
       <div class="card">
         <span class="chip"><span class="dot"></span> Business</span>
         <h3 style="margin:.7rem 0 .4rem;">Priya · SVP Retail Operations</h3>
-        <p>"Which stores act differently tomorrow?" → The live view + approved recovery actions, store by store.</p>
+        <p>"Which stores act differently tomorrow?" The live view plus approved recovery actions, store by store.</p>
       </div>
       <div class="card">
         <span class="chip"><span class="dot"></span> Business</span>
         <h3 style="margin:.7rem 0 .4rem;">Amara · VP Finance, Technology</h3>
-        <p>"What does a recommendation cost?" → The gateway dashboard: capped, attributable, reconcilable spend.</p>
+        <p>"What does a recommendation cost?" The gateway dashboard: capped, attributable, reconcilable spend.</p>
       </div>
       <div class="card">
         <span class="chip brand"><span class="dot"></span> Technical</span>
         <h3 style="margin:.7rem 0 .4rem;">Tobias · Director, Data Engineering</h3>
-        <p>"Can this serve 400 stores without a nightly batch?" → Lakebase synced reads at low latency, no second DB.</p>
+        <p>"Can this serve 400 stores without a nightly batch?" Lakebase synced reads at low latency, no second DB.</p>
       </div>
       <div class="card">
         <span class="chip brand"><span class="dot"></span> Technical</span>
         <h3 style="margin:.7rem 0 .4rem;">Hector · Platform Engineering Lead</h3>
-        <p>"Can I explain why the app said that, and show my work?" → Inference-table traces back to the records behind every recommendation.</p>
+        <p>"Can I explain why the app said that, and show my work?" Inference-table traces back to the records behind every recommendation.</p>
       </div>
     </div>
   </div>
@@ -542,7 +470,7 @@
       <div class="stack-md">
         <div class="rail">
           <h3>"Will it hold at 400 stores?"</h3>
-          <p style="color:var(--ink-soft);margin-top:.35rem;font-size:.97rem;">Synced UC table → Postgres for low-latency reads; writable tables isolate app state; reverse sync (SCD2) streams decisions back to Delta.</p>
+          <p style="color:var(--ink-soft);margin-top:.35rem;font-size:.97rem;">Synced UC table to Postgres for low-latency reads; writable tables isolate app state; reverse sync (SCD2) streams decisions back to Delta.</p>
         </div>
         <div class="rail">
           <h3>"Was it the model or the data?"</h3>
@@ -554,55 +482,41 @@
         </div>
       </div>
       <div class="card">
-        <p class="eyebrow" style="margin-bottom:.9rem;">Evidence the build stands on</p>
+        <p class="eyebrow" style="margin-bottom:.9rem;">The evidence it stands on</p>
         <div class="kv">
-          <span class="mono">sync</span><span>Governed UC table → Lakebase, as code (DABs / Terraform)</span>
-          <span class="mono">branch</span><span>Dev branch off main; agent change validated &amp; promoted</span>
+          <span class="mono">sync</span><span>Governed UC table to Lakebase, defined as code (DABs / Terraform)</span>
+          <span class="mono">branch</span><span>Dev branch off main; agent change validated and promoted</span>
           <span class="mono">search</span><span>Lakebase hybrid search, retrieval stays in-account</span>
           <span class="mono">write-back</span><span>Approved action commits, reflected on next read</span>
-          <span class="mono">gateway</span><span>Budget block + guardrail block, both traced</span>
+          <span class="mono">gateway</span><span>Budget block plus guardrail block, both traced</span>
         </div>
-        <p style="margin-top:1.1rem;color:var(--muted);font-size:.85rem;">Config alone isn't proof. Every claim above ties to an export that shows it actually happened.</p>
+        <p style="margin-top:1.1rem;color:var(--muted);font-size:.85rem;">Config alone isn't proof. Every claim ties to an export that shows it actually happened.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ 11 · CLOSE ============ -->
+<!-- ============ 11 · CREDITS / CLOSE ============ -->
 <section class="slide" id="close">
-  <div class="glow" aria-hidden="true"></div>
   <div class="wrap">
-    <p class="eyebrow pos">The ask</p>
-    <h2>Governed data, on the floor, today,<br>with the AI on a leash.</h2>
-    <div class="cards grid-3" style="margin-top:2.2rem;">
+    <p class="eyebrow gold">That's a wrap</p>
+    <h2>Governed data, on the floor,<br>with the AI on a leash.</h2>
+    <div class="cards grid-3" style="margin-top:2rem;">
       <div class="card stat win"><span class="big num">~$22M</span><span class="lbl">Revenue + margin, per year</span></div>
-      <div class="card stat brand"><span class="big">Real-time</span><span class="lbl">Decision at the shelf</span></div>
-      <div class="card stat brand"><span class="big">Capped</span><span class="lbl">AI spend, fully traced</span></div>
+      <div class="card stat brand"><span class="big">LIVE</span><span class="lbl">Decision at the shelf</span></div>
+      <div class="card stat brand"><span class="big">CAPPED</span><span class="lbl">AI spend, fully traced</span></div>
     </div>
-    <p class="lead" style="margin-top:2rem;">One platform. One connected solution. Built to run at 400 stores, safe to iterate on, and cheap to trust.</p>
-    <p class="footnote">Questions welcome throughout · ShelfSignal for NorthPeak Retail · Team LAKE</p>
+    <div style="margin-top:2.2rem;display:flex;flex-direction:column;gap:.5rem;">
+      <p class="stars">★★★★★ <span style="font-family:'IBM Plex Mono',monospace;font-size:.8rem;letter-spacing:.12em;color:var(--muted);">ZERO STARS LOST</span></p>
+      <p style="color:var(--ink-soft);"><b style="color:var(--ink)">Starring</b> Marshall Krassenstein as The Demo Guy · Logan Carlson as The Wheelman · one extremely good boy as The Co-Host.</p>
+    </div>
+    <p class="footnote">Grand Theft Demo · NorthPeak Retail · Databricks Demo Days 2026 · Team LAKE</p>
   </div>
 </section>
 </div>
 
 <script>
   (function () {
-    var root = document.documentElement;
-    // ---- theme ----
-    var stored = null;
-    try { stored = localStorage.getItem("ss-theme"); } catch (e) {}
-    if (stored === "dark" || stored === "light") root.setAttribute("data-theme", stored);
-    document.getElementById("theme").addEventListener("click", function () {
-      var isDark = getComputedStyle(root).getPropertyValue("--bg").trim().indexOf("#08") === 0;
-      // resolve current effective theme robustly
-      var explicit = root.getAttribute("data-theme");
-      var effective = explicit || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      var nextTheme = effective === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", nextTheme);
-      try { localStorage.setItem("ss-theme", nextTheme); } catch (e) {}
-    });
-
-    // ---- slide tracking ----
     var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
     var deck = document.getElementById("deck");
     var curEl = document.getElementById("cur");
@@ -616,7 +530,7 @@
     function pad(n){ return String(n + 1).padStart(2, "0"); }
     function render(){
       curEl.textContent = pad(idx);
-      bar.style.width = ((idx) / (slides.length - 1) * 100) + "%";
+      bar.style.width = (idx / (slides.length - 1) * 100) + "%";
       prevBtn.disabled = idx === 0;
       nextBtn.disabled = idx === slides.length - 1;
     }
