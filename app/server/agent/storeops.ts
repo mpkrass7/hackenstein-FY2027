@@ -16,9 +16,9 @@
  *     space if `genieSpaceId` is set. This is the trainee's Build-1 choice
  *     (they wire ONE backend); the app registers whichever is configured.
  *
- * TRAINEE BUILDS (stubbed here — they THROW "not implemented" so the app
- * still compiles + boots, and the model knows the tools exist):
+ * IMPLEMENTED (Build 2 + Build 3):
  *   - `find_shortfall`         → Build 2 (Assist): read the live shortfall
+ *   - `search_products`        → Build 2 (Assist): product catalog search for substitutes
  *   - `rank_recovery_moves`    → Build 2 (Assist): read the ML recommendation
  *   - `execute_recovery_action`→ Build 3 (Act):   the human-in-the-loop write
  *
@@ -45,6 +45,14 @@ import * as mlflow from 'mlflow-tracing';
 import { z } from 'zod';
 import { authHeaders } from '../lib/auth.js';
 import type { AppDb } from '../db/index.js';
+import { sql } from 'drizzle-orm';
+import {
+  getShortfall,
+  worstShortfall,
+  getPosition,
+  getRecommendation,
+} from '../db/queries/stores.js';
+import { opsActions, type AuditEntry } from '../db/schema.js';
 // The data-backend helpers. Both are config-driven and share the same
 // DataCallResult shape + ToolProgressEvent stream, so the `ask_data` tool
 // below can delegate to EITHER without the UI caring which powers it. This
@@ -145,11 +153,47 @@ function makeTools(ctx: AgentContext): Tool[] {
         .nullable()
         .describe('SKU, e.g. SKU-APP-04412. Null → return the worst open shortfall.'),
     }),
-    execute: async () => {
-      throw new Error(
-        'Not implemented — this is your Build 2 Assist task; see APP_WORKSHOP.md',
-      );
-    },
+    execute: async ({ store_id, product_id }) =>
+      mlflow.withSpan(
+        async () => {
+          const shortfall = store_id && product_id
+            ? await getShortfall(ctx.db, store_id, product_id)
+            : await worstShortfall(ctx.db);
+          if (!shortfall) {
+            return JSON.stringify({ error: 'No open shortfall found.' });
+          }
+          // Enrich with position context (store name, city, weeks of supply).
+          const posId = `${shortfall.storeId}:${shortfall.productId}`;
+          const position = await getPosition(ctx.db, posId);
+          const result = {
+            storeId: shortfall.storeId,
+            storeName: position?.storeName ?? null,
+            city: position?.city ?? null,
+            region: position?.region ?? null,
+            climateZone: position?.climateZone ?? null,
+            productId: shortfall.productId,
+            productName: position?.productName ?? null,
+            onHandUnits: shortfall.onHandUnits,
+            avgDailyVelocity: shortfall.avgDailyVelocity,
+            weeksOfSupply: position?.weeksOfSupply ?? null,
+            lostSalesExposureUsd: shortfall.lostSalesExposureUsd,
+            positionStatus: position?.positionStatus ?? 'stockout',
+            nearestSurplus: shortfall.nearestSurplusStoreId
+              ? {
+                  storeId: shortfall.nearestSurplusStoreId,
+                  onHandUnits: shortfall.nearestSurplusOnHand,
+                  distanceKm: shortfall.nearestSurplusDistanceKm,
+                }
+              : null,
+          };
+          return JSON.stringify(result);
+        },
+        {
+          name: 'find_shortfall',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { store_id, product_id },
+        },
+      ),
   });
 
   // ── rank_recovery_moves — TRAINEE BUILDS (Build 2 · Assist). STUB. ────────
@@ -169,11 +213,34 @@ function makeTools(ctx: AgentContext): Tool[] {
       store_id: z.string().describe('Store id, e.g. STORE-0214.'),
       product_id: z.string().describe('SKU, e.g. SKU-APP-04412.'),
     }),
-    execute: async () => {
-      throw new Error(
-        'Not implemented — this is your Build 2 Assist task; see APP_WORKSHOP.md',
-      );
-    },
+    execute: async ({ store_id, product_id }) =>
+      mlflow.withSpan(
+        async () => {
+          const rec = await getRecommendation(ctx.db, store_id, product_id);
+          if (!rec) {
+            return JSON.stringify({
+              error: `No recovery recommendation found for ${store_id} / ${product_id}. The ML model may not have scored this shortfall yet.`,
+            });
+          }
+          const result = {
+            storeId: rec.storeId,
+            productId: rec.productId,
+            recommendedMove: rec.recommendedMove,
+            recommendedSourceStoreId: rec.recommendedSourceStoreId,
+            recommendedSubstituteProductId: rec.recommendedSubstituteProductId,
+            recommendedUnits: rec.recommendedUnits,
+            predictedRecapturedUsd: rec.predictedRecapturedUsd,
+            predictedNetValueUsd: rec.predictedNetValueUsd,
+            moveRanking: rec.moveRanking,
+          };
+          return JSON.stringify(result);
+        },
+        {
+          name: 'rank_recovery_moves',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { store_id, product_id },
+        },
+      ),
   });
 
   // ── execute_recovery_action — TRAINEE BUILDS (Build 3 · Act). STUB. ───────
@@ -210,18 +277,159 @@ function makeTools(ctx: AgentContext): Tool[] {
         .number()
         .describe('Predicted recaptured revenue for this move (from rank_recovery_moves).'),
     }),
-    execute: async () => {
-      throw new Error(
-        'Not implemented — this is your Build 2/3 Assist/Act task; see APP_WORKSHOP.md',
-      );
-    },
+    execute: async ({
+      store_id,
+      product_id,
+      move_type,
+      units,
+      source_store_id,
+      drafted_request,
+      predicted_recaptured_usd,
+    }) =>
+      mlflow.withSpan(
+        async () => {
+          const now = new Date().toISOString();
+          const auditEntry: AuditEntry = {
+            at: now,
+            by: ctx.userEmail,
+            action: 'approved',
+            notes: `${move_type} ${units} units approved via assistant`,
+            tool: 'execute_recovery_action',
+          };
+
+          // Record the approved recovery action.
+          await ctx.db.insert(opsActions).values({
+            storeId: store_id,
+            productId: product_id,
+            moveType: move_type,
+            sourceStoreId: source_store_id,
+            units,
+            draftedRequest: drafted_request,
+            predictedRecapturedUsd: predicted_recaptured_usd,
+            status: 'approved',
+            approvedBy: ctx.userEmail,
+            auditTrail: [auditEntry],
+            decidedAt: new Date(),
+          });
+
+          // For transfers: paired markdown-hold on the source surplus store.
+          if (move_type === 'transfer' && source_store_id) {
+            const holdAudit: AuditEntry = {
+              at: now,
+              by: ctx.userEmail,
+              action: 'markdown_hold',
+              notes: `Hold set: ${units} units reserved for transfer to ${store_id}`,
+              tool: 'execute_recovery_action',
+            };
+            await ctx.db.insert(opsActions).values({
+              storeId: source_store_id,
+              productId: product_id,
+              moveType: 'markdown_hold',
+              sourceStoreId: store_id,
+              units,
+              draftedRequest: `Markdown hold: ${units} units reserved for transfer to ${store_id}`,
+              predictedRecapturedUsd: predicted_recaptured_usd,
+              status: 'approved',
+              approvedBy: ctx.userEmail,
+              auditTrail: [holdAudit],
+              decidedAt: new Date(),
+            });
+          }
+
+          // Signal the UI to refresh (Operations page subscribes).
+          ctx.onToolProgress?.({
+            type: 'dataMutated',
+            entity: 'ops_actions',
+          } as import('./tools/types.js').ToolProgressEvent);
+
+          return JSON.stringify({
+            success: true,
+            storeId: store_id,
+            productId: product_id,
+            moveType: move_type,
+            units,
+            sourceStoreId: source_store_id,
+            approvedBy: ctx.userEmail,
+            predictedRecapturedUsd: predicted_recaptured_usd,
+          });
+        },
+        {
+          name: 'execute_recovery_action',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { store_id, product_id, move_type, units, source_store_id },
+        },
+      ),
   });
 
-  // find_shortfall / rank_recovery_moves / execute_recovery_action are
-  // registered so the MODEL knows they exist (and the trainee sees them in
-  // the tool list) — they throw until implemented. ask_data is registered
-  // only when a backend is configured.
-  const tools: Tool[] = [findShortfall, rankRecoveryMoves, executeRecoveryAction];
+  // ── search_products — text search over the product catalog for substitutes. ──
+  // Powers the substitute recovery option: finds comparable in-stock items
+  // matching a search query (e.g. "warm insulated jacket"). Uses ILIKE as a
+  // baseline; upgrade to Lakebase Search (hybrid text/vector) when available.
+  const searchProducts = tool({
+    name: 'search_products',
+    description:
+      'Search the product catalog for comparable in-stock items matching a text query (e.g. "warm insulated jacket similar to Summit Down Parka"). Returns ranked candidates with product_id, product_name, category, price_usd. Use when evaluating the substitute recovery option to find what could replace the sold-out SKU.',
+    parameters: z.object({
+      query: z
+        .string()
+        .describe(
+          'Search terms describing the type of product to find (material, warmth, style, category).',
+        ),
+      limit: z
+        .number()
+        .int()
+        .nullable()
+        .describe('Max results to return. Null defaults to 5.'),
+    }),
+    execute: async ({ query, limit: maxResults }) =>
+      mlflow.withSpan(
+        async () => {
+          const cap = maxResults ?? 5;
+          // Combine search terms into a single ILIKE pattern for name + description.
+          const pattern = `%${query.replace(/\s+/g, '%')}%`;
+          const res = await ctx.db.execute(sql`
+            SELECT product_id, product_name, category, subcategory,
+                   price_usd, description
+            FROM app.products
+            WHERE (product_name ILIKE ${pattern}
+                   OR description ILIKE ${pattern}
+                   OR category ILIKE ${pattern})
+              AND is_active = true
+            ORDER BY product_name
+            LIMIT ${cap}
+          `);
+          const products = (res.rows as Array<{
+            product_id: string;
+            product_name: string;
+            category: string;
+            subcategory: string | null;
+            price_usd: number | string;
+            description: string | null;
+          }>).map((r) => ({
+            productId: r.product_id,
+            productName: r.product_name,
+            category: r.category,
+            subcategory: r.subcategory,
+            priceUsd: Number(r.price_usd),
+            description: r.description,
+          }));
+          return JSON.stringify({ query, results: products });
+        },
+        {
+          name: 'search_products',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { query, limit: maxResults },
+        },
+      ),
+  });
+
+  // All tools registered. ask_data only when a backend is configured.
+  const tools: Tool[] = [
+    findShortfall,
+    searchProducts,
+    rankRecoveryMoves,
+    executeRecoveryAction,
+  ];
   if (ctx.masEndpointName || ctx.genieSpaceId) {
     tools.unshift(askData);
   }
