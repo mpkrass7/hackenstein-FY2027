@@ -1,5 +1,7 @@
 # Workshop - NorthPeak Retail (Stockout & Markdown Rescue)
 
+![Grand Theft Demo, NorthPeak Retail](assets/grand_theft_demo.png)
+
 **The use case, in plain words:** NorthPeak is a US retailer. A cold snap made winter coats **sell out in cold-weather stores** while the **same coats pile up unsold in warm-weather stores**. You build an app that spots each short store, recommends the best fix — **move stock from a nearby store, rush it from the warehouse, or offer a similar item** — and lets a manager approve it in one click. The data, the recommendation, and the AI that assists are all governed on Databricks.
 
 ## 🎓 Start here — you build this, it isn't pre-built
